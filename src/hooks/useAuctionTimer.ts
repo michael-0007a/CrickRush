@@ -68,7 +68,6 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
       const { data, error } = await supabase.rpc('get_server_time');
 
       if (error) {
-        console.warn('Server time function not available, using client time:', error.message);
         // Fallback: assume no offset if server function doesn't exist
         serverTimeOffsetRef.current = 0;
         return;
@@ -77,9 +76,7 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
       const serverTime = new Date(data).getTime();
       serverTimeOffsetRef.current = serverTime - clientTime;
 
-      console.log('Server time offset calculated:', serverTimeOffsetRef.current);
     } catch (error) {
-      console.warn('Error calculating server time offset, using client time:', error);
       // Fallback: assume no offset if there's any error
       serverTimeOffsetRef.current = 0;
     }
@@ -108,7 +105,6 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.warn('Timer table not available, using default timer:', error.message);
         // Fallback: use default timer values if table doesn't exist
         setTimeRemaining(30);
         setIsRunning(false);
@@ -133,20 +129,12 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
 
         setTimeRemaining(remainingTime);
         setIsRunning(timerData.is_running && remainingTime > 0);
-
-        console.log('Timer state loaded:', {
-          originalTime: timerData.time_remaining,
-          elapsedSeconds,
-          remainingTime,
-          isRunning: timerData.is_running && remainingTime > 0
-        });
       } else {
         // No timer data found, use defaults
         setTimeRemaining(30);
         setIsRunning(false);
       }
     } catch (error) {
-      console.warn('Error loading timer state, using defaults:', error);
       // Fallback: use default timer values
       setTimeRemaining(30);
       setIsRunning(false);
@@ -181,13 +169,9 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
         });
 
       if (error) {
-        console.warn('Could not update timer in database, continuing with local timer:', error.message);
         // Continue with local timer even if database update fails
-      } else {
-        console.log('Timer state updated:', { newTime, running });
       }
     } catch (error) {
-      console.warn('Error updating timer state, continuing with local timer:', error);
       // Continue with local timer even if database update fails
     }
   }, [roomId, isAuctioneer, getCurrentTime]);
@@ -200,7 +184,6 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
    */
   const startTimer = useCallback(async (duration: number = 30) => {
     if (!isAuctioneer) {
-      console.warn('Only auctioneer can start timer');
       return;
     }
 
@@ -215,7 +198,6 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
    */
   const stopTimer = useCallback(async () => {
     if (!isAuctioneer) {
-      console.warn('Only auctioneer can stop timer');
       return;
     }
 
@@ -231,7 +213,6 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
    */
   const resetTimer = useCallback(async (duration: number) => {
     if (!isAuctioneer) {
-      console.warn('Only auctioneer can reset timer');
       return;
     }
 
@@ -248,7 +229,6 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
    */
   const addTime = useCallback(async (seconds: number) => {
     if (!isAuctioneer) {
-      console.warn('Only auctioneer can add time');
       return;
     }
 
@@ -364,14 +344,6 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
           if (remainingTime > 0) {
             setHasExpired(false);
           }
-
-          console.log('Timer updated via real-time:', {
-            originalTime: timerData.time_remaining,
-            elapsedSeconds,
-            remainingTime,
-            isRunning: timerData.is_running && remainingTime > 0,
-            userType: isAuctioneer ? 'auctioneer' : 'participant'
-          });
         }
       })
       .subscribe();

@@ -96,18 +96,15 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
         .single();
 
       if (auctionError && auctionError.code !== 'PGRST116') {
-        console.error('Error loading auction state:', auctionError);
         setError('Failed to load auction state');
         return;
       }
 
       if (auctionData) {
         setAuctionState(auctionData);
-        console.log('Initial auction state loaded:', auctionData);
       }
 
     } catch (error) {
-      console.error('Exception loading auction state:', error);
       setError('Failed to load auction state');
     } finally {
       setLoading(false);
@@ -123,8 +120,6 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
   useEffect(() => {
     if (!roomId) return;
 
-    console.log('Setting up real-time subscription for auction state:', roomId);
-
     const subscription = supabase
       .channel(`auction_state_${roomId}`)
       .on('postgres_changes', {
@@ -133,18 +128,13 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
         table: 'auction_state',
         filter: `room_id=eq.${roomId}`
       }, (payload) => {
-        console.log('Auction state update received:', payload);
-
         if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
           setAuctionState(payload.new as AuctionState);
         }
       })
-      .subscribe((status) => {
-        console.log('Auction state subscription status:', status);
-      });
+      .subscribe();
 
     return () => {
-      console.log('Cleaning up auction state subscription');
       subscription.unsubscribe();
     };
   }, [roomId]);

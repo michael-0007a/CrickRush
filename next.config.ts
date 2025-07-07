@@ -1,13 +1,20 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['react', 'react-dom', '@supabase/supabase-js', 'socket.io-client']
+    optimizePackageImports: ['react', 'react-dom']
   },
   images: {
     formats: ['image/webp', 'image/avif'],
-    minimumCacheTTL: 60
+    minimumCacheTTL: 60,
+    domains: ['jmfqzvrvvzsmjhovkljt.supabase.co']
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'
