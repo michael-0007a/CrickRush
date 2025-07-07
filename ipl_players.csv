@@ -1,0 +1,229 @@
+id,name,role,country,base_price,description,is_overseas,created_at
+8fafc428-d819-4d07-aea4-9f09c2cf5d93,Mohit Rathee,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2025-03-27 05:23:40.395210+00
+3a590334-c908-425d-88c4-8b32ad6adc55,Vignesh Puthur,Batting All-rounder,India,5000000,Dynamic India all-rounder with explosive batting and clever bowling variations,FALSE,2024-03-06 02:22:03.314639+00
+e3f7287d-ef76-471c-b6d3-20c87de67d97,Ashok Sharma,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2024-01-31 23:54:51.570642+00
+fce43e08-1678-495c-bfb0-d3026aa98831,Abhinandan Singh,Fast Bowler,India,5000000,Express India fast bowler known for generating steep bounce and movement,FALSE,2024-03-07 03:49:59.353375+00
+eb5a0c8f-6115-4a11-9ce0-03e6cf45986c,Lizaad Williams,Spinner,South Africa,20000000,Crafty South Africa spinner who can turn the ball both ways with precision,TRUE,2025-02-05 14:40:24.004651+00
+68d76504-9aa3-47a8-9823-4993fc44c2aa,Kunal Singh Rathore,Power Hitter,India,5000000,Powerful India batsman with a reputation for clearing boundaries at will,FALSE,2025-03-14 10:32:09.893987+00
+a76315e9-a458-4ecb-be69-72d9c590370a,Madhav Tiwari,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2025-02-24 14:57:34.564452+00
+5d92c1c8-4d24-48cb-a075-63ca8a84828a,Tripurana Vijay,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-11-23 01:21:57.662406+00
+524e3d1e-b2d9-4909-a1b4-1408f355a1d3,Bevon Jacobs,Versatile Batsman,South Africa,20000000,Versatile South Africa batsman capable of adapting to various match situations,TRUE,2024-09-02 03:35:37.148442+00
+3ad7f4bc-7265-41cc-a6d1-b3ce54a9841c,Karim Janat,Utility Player,Afghanistan,20000000,Reliable Afghanistan utility player who provides balance to the team composition,TRUE,2025-03-21 11:46:06.854114+00
+5e4704be-7211-4b3e-8fba-a4470cbdca07,Manvanth Kumar,Batting All-rounder,India,5000000,Dynamic India all-rounder with explosive batting and clever bowling variations,FALSE,2024-10-31 04:55:07.209386+00
+f824bda8-6cc1-44c1-a37d-79dd12e87b4a,Ajay Mandal,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2025-01-16 06:54:07.350087+00
+63b1185d-8a34-4224-a20f-0e8a36fcf82f,Praveen Dubey,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2024-09-01 17:41:45.279912+00
+1fc7c1d7-dc62-4dda-b115-d74473ce9338,Matthew Breetzke,Middle-order Batsman,South Africa,20000000,Dynamic South Africa middle-order batsman who excels in pressure situations,TRUE,2025-05-04 15:45:54.539680+00
+d74049e1-1608-4153-80bf-05aa590a1136,Sachin Baby,Power Hitter,India,5000000,Powerful India batsman with a reputation for clearing boundaries at will,FALSE,2024-08-04 09:54:13.037991+00
+e0f9c16e-2b2c-4d96-b2ca-f7847798e98a,Arjun Tendulkar,Spinner,India,5000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2024-10-22 19:03:01.489377+00
+8b45f17c-3e98-495d-b33e-9aa5674545aa,Eshan Malinga,Death Bowler,Sri Lanka,20000000,Experienced Sri Lanka death bowler with pinpoint accuracy under pressure,TRUE,2024-08-10 07:52:18.178289+00
+75c1d3f1-eb46-49a5-8689-2277f78be31b,Vaibhav Suryavanshi,Versatile Batsman,India,5000000,Versatile India batsman capable of adapting to various match situations,FALSE,2024-09-22 22:18:04.284919+00
+58668cae-f54d-4436-b902-a505ea4e972c,Satyanarayana Raju,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2024-07-20 06:41:08.106467+00
+bc0ce661-c57c-48a7-8e72-956314518010,Ramakrishna Ghosh,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2025-05-13 14:15:56.565228+00
+ad366474-7607-4d3a-8ef1-d99a5ac2573a,Pyla Avinash,Opening Batsman,India,5000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-12-12 20:31:54.062953+00
+35cf534c-f8a9-4d38-8ada-f4c4cc6dd0ba,Kamlesh Nagarkoti,Versatile All-rounder,India,5000000,Versatile India player known for match-changing performances in all departments,FALSE,2024-02-06 12:49:44.147376+00
+6885c3e8-21dc-4681-8405-e7706ad80354,Yuvraj Chaudhary,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-09-05 10:58:22.820489+00
+3161db93-b4ce-4928-810a-51818df23387,Lungi Ngidi,Fast Bowler,South Africa,20000000,Emerging South Africa bowler with raw pace and natural swing,TRUE,2024-08-31 09:45:08.644275+00
+aa15514b-4c82-407a-865e-a922c6111d70,Xavier Bartlett,Fast Bowler,Australia,20000000,Emerging Australia bowler with raw pace and natural swing,TRUE,2024-12-22 06:09:55.811816+00
+be86d129-eee5-4c12-95fc-38c66db53afd,Jamie Overton,Complete All-rounder,England,20000000,Complete England all-rounder who contributes equally with bat and ball,TRUE,2024-04-16 14:57:30.674878+00
+3f87b47d-ecc2-4d4a-b043-d2cfb2007910,Prince Yadav,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2025-02-06 03:39:16.585519+00
+40bfa32e-5812-4f2b-bc9a-1ef4e086dd28,Kulwant Khejroliya,Fast Bowler,India,5000000,Express India fast bowler known for generating steep bounce and movement,FALSE,2024-11-12 17:10:58.941469+00
+f114b903-0a52-46f8-b324-680383753def,Suryansh Shedge,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2025-06-19 05:22:13.060185+00
+55a3099f-0f52-4742-bd7a-fb82b4844810,Musheer Khan,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2025-04-06 06:56:50.750461+00
+ab3a1f01-7351-4887-9cc7-98c116a4eae5,Raj Bawa,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2025-02-10 22:19:39.164795+00
+ee783648-dda2-4e9c-bf0f-e77b8c7f25ae,Aniket Verma,Middle-order Batsman,India,5000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2025-02-17 10:15:24.861142+00
+c2053799-e1e2-4c57-ba62-f26ea82051c8,Shamar Joseph,Fast Bowler,West Indies,20000000,Emerging West Indies bowler with raw pace and natural swing,TRUE,2024-10-31 15:55:55.038906+00
+f501438c-74d7-42da-9d03-bce307a31ca1,Nathan Ellis,Fast Bowler,Australia,20000000,Skillful Australia bowler with excellent control and variations in pace,TRUE,2024-11-30 12:48:18.154954+00
+36900047-bb11-43e4-b342-6db3cde86a90,Dushmantha Chameera,Spinner,Sri Lanka,20000000,Crafty Sri Lanka spinner who can turn the ball both ways with precision,TRUE,2024-01-12 00:15:34.687540+00
+156be119-a75b-4d6b-a600-f0d0ef39d0bb,Kamindu Mendis,Fielding All-rounder,Sri Lanka,20000000,Athletic Sri Lanka all-rounder with exceptional fielding skills and game awareness,TRUE,2024-05-30 12:48:07.291666+00
+8921d577-8928-4fcd-a695-b9b580a6aa62,Aaron Hardie,Fielding All-rounder,Australia,20000000,Athletic Australia all-rounder with exceptional fielding skills and game awareness,TRUE,2024-07-22 16:07:18.016966+00
+a0457d5c-88f9-434f-b204-b677d7d5ab23,Brydon Carse,Batting All-rounder,England,20000000,Dynamic England all-rounder with explosive batting and clever bowling variations,TRUE,2025-04-19 07:01:36.874056+00
+ac66b136-5147-4427-92d0-ffa252e2b950,Jacob Bethell,Versatile All-rounder,England,20000000,Versatile England player known for match-changing performances in all departments,TRUE,2024-03-25 01:04:22.052529+00
+d7252bb0-eea0-4114-8744-31025085c1e3,Krishnan Shrijith,Versatile Batsman,India,5000000,Versatile India batsman capable of adapting to various match situations,FALSE,2024-03-03 17:11:12.020694+00
+47032d92-6172-4c5b-8219-bc10d813b1a8,Vipraj Nigam,Versatile All-rounder,India,5000000,Versatile India player known for match-changing performances in all departments,FALSE,2025-01-11 20:39:24.972872+00
+d31c0f4e-a55b-4b58-82b5-318cfe424a3c,Manoj Bhandage,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-11-20 18:55:59.336258+00
+d5c558f3-7783-4867-b1ca-d39014597ce0,Priyansh Arya,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-07-12 01:56:01.332961+00
+a9bcbcc4-07c0-4984-bbdb-a7f32091abc6,Reece Topley,Spinner,England,20000000,Crafty England spinner who can turn the ball both ways with precision,TRUE,2024-01-28 15:17:49.926747+00
+0bb5645b-f1e8-41b9-9746-f7747ccdafd1,Kuldeep Sen,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2024-08-07 21:35:46.749648+00
+5cb606c8-2d38-4ff9-a626-9acb8f148a11,Kwena Maphaka,Spinner,South Africa,20000000,Crafty South Africa spinner who can turn the ball both ways with precision,TRUE,2024-09-25 16:06:04.075537+00
+5ff91110-e066-4dac-90e1-a7f6ab76c376,Fazalhaq Farooqi,Spinner,Afghanistan,20000000,Crafty Afghanistan spinner who can turn the ball both ways with precision,TRUE,2024-03-11 15:25:31.155897+00
+8ccc708c-488a-43d1-b691-fe88590108c8,Jayant Yadav,Batting All-rounder,India,5000000,Dynamic India all-rounder with explosive batting and clever bowling variations,FALSE,2024-06-09 19:38:34.519908+00
+61bebd69-64fc-42ff-9840-a565a8995674,Mitchell Santner,Batting All-rounder,New Zealand,20000000,Dynamic New Zealand all-rounder with explosive batting and clever bowling variations,TRUE,2025-02-16 03:28:19.530954+00
+710a8647-981e-4f6b-bc04-1127de9a16f0,Gurjapneet Singh,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2025-06-08 18:40:20.497129+00
+e76c7fa5-5a9f-4cb6-a900-d07a005a1321,Akash Singh,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2025-05-23 13:58:01.549837+00
+d8f2e41b-973a-461a-9960-d2bf1e135968,Ashwani Kumar,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2025-02-27 18:39:35.201718+00
+59c01e67-47ca-4b78-8ce5-ea1cf2b4106e,Arshin Kulkarni,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2024-03-29 06:54:48.524912+00
+f74493fa-23ea-4436-a168-1bb4b76fd016,Rajvardhan Hangargekar,Versatile All-rounder,India,5000000,Versatile India player known for match-changing performances in all departments,FALSE,2025-05-29 17:42:43.249985+00
+5fb047a3-ee5b-4acf-9f18-ab9fd693e3e3,Yudhvir Singh,Versatile All-rounder,India,5000000,Versatile India player known for match-changing performances in all departments,FALSE,2025-01-12 21:09:35.527684+00
+c857f06c-3958-4ad8-a015-0a71b42d5de4,C Andre Siddarth,Opening Batsman,India,5000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2025-04-01 01:51:59.553531+00
+f0296373-1454-4d90-82a8-ebf8f8388d43,Harnoor Singh,Versatile Batsman,India,5000000,Versatile India batsman capable of adapting to various match situations,FALSE,2024-07-17 03:08:24.897470+00
+bf4f1d2e-803b-4434-b1eb-332ea2eb55c6,Jaydev Unadkat,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2024-11-19 13:24:52.342513+00
+c76c12f7-2206-4b6b-a680-39e524c1dd89,Nuwan Thushara,Fast Bowler,Sri Lanka,20000000,Emerging Sri Lanka bowler with raw pace and natural swing,TRUE,2025-04-06 05:03:14.907885+00
+50a7c1d0-97e2-40d7-b935-1ea6b8cd19c2,Ishant Sharma,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2025-04-17 21:31:47.376420+00
+648b6f5c-5524-4d37-86cc-b297f7ed4eaa,Umran Malik,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2024-04-16 05:43:20.872691+00
+cbb39396-f945-4d2f-8b05-38f5c085a63d,Spencer Johnson,Spinner,Australia,20000000,Crafty Australia spinner who can turn the ball both ways with precision,TRUE,2025-04-25 14:51:11.294163+00
+73b62e66-a522-4e8a-a65c-5651d073e27e,Romario Shepherd,Fielding All-rounder,West Indies,20000000,Athletic West Indies all-rounder with exceptional fielding skills and game awareness,TRUE,2024-08-30 16:29:37.616444+00
+8c73730d-c648-4233-bd80-683dabac2d9f,Sai Kishore,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2024-02-10 19:28:04.918270+00
+e2bee403-f562-4949-bdea-a4e9887b1e72,Azmatullah Omarzai,Versatile All-rounder,Afghanistan,20000000,Versatile Afghanistan player known for match-changing performances in all departments,TRUE,2024-06-28 06:57:40.334973+00
+0c9ff2ce-e47c-4502-afc9-15a2c1de659f,Will Jacks,Complete All-rounder,England,20000000,Complete England all-rounder who contributes equally with bat and ball,TRUE,2024-06-13 01:10:25.211788+00
+fe5c7e0a-152a-4f45-b0b9-a9c520f7b0ae,Deepak Hooda,Versatile All-rounder,India,5000000,Versatile India player known for match-changing performances in all departments,FALSE,2024-02-16 15:54:31.207417+00
+c221f29f-7fd1-405a-8c39-50fd3c1b0932,Tim David,Utility Player,Australia,20000000,Reliable Australia utility player who provides balance to the team composition,TRUE,2024-07-07 21:40:32.390855+00
+a17ce7d3-64bc-4120-ad08-7a2c61347f21,Moeen Ali,Versatile All-rounder,England,20000000,Versatile England player known for match-changing performances in all departments,TRUE,2025-02-18 19:31:45.938922+00
+276ea7a1-3587-47b3-8078-8e1c8a071f39,Shahbaz Ahmed,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2024-07-20 07:41:11.098305+00
+9e00f525-783c-497a-abae-8e47b440d403,Sherfane Rutherford,Power Hitter,West Indies,20000000,Powerful West Indies batsman with a reputation for clearing boundaries at will,TRUE,2024-04-30 11:42:22.401583+00
+948b585f-2ae8-42fc-b710-85f17a4e3905,Manish Pandey,Middle-order Batsman,India,5000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2024-12-24 12:37:40.971478+00
+4002eb61-5560-4c68-9855-fa5e41bb0a1f,Digvesh Rathi,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2025-02-28 18:50:36.635586+00
+c26f1ea8-bc3c-429b-a239-008697a5e784,Manimaran Siddharth,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2025-01-15 00:09:23.128864+00
+7ab8f001-7552-411b-80c9-3553503e8677,Zeeshan Ansari,Fast Bowler,India,5000000,Express India fast bowler known for generating steep bounce and movement,FALSE,2024-09-19 17:55:35.497632+00
+ae1c3bd8-a469-4e88-9927-460f439421c0,Mukesh Choudhary,Spinner,India,5000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2024-01-24 05:56:03.457177+00
+698f6fbd-f815-4d89-a4d1-494bb00bbd0e,Gurnoor Brar,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2024-06-25 20:40:39.325037+00
+c47d7846-3895-46e9-9fb6-857cea5c61bf,Vansh Bedi,Middle-order Batsman,India,5000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2024-06-17 23:45:39.058237+00
+5f29d20b-b12f-4f62-83ef-d88a551b08a5,Swapnil Singh,Batting All-rounder,India,5000000,Dynamic India all-rounder with explosive batting and clever bowling variations,FALSE,2025-06-12 22:12:43.243411+00
+651b4757-da0b-4e16-ad41-583d8ce9f71b,Anukul Roy,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2024-05-12 13:08:12.777448+00
+4fc5c770-e22f-4a9f-bd86-da05ec25491e,Darshan Nalkande,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2025-02-22 14:37:28.185286+00
+55fc2245-177d-43aa-a611-3a0d0da257cf,Arshad Khan,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-02-02 21:21:41.909068+00
+a5c8c7f0-ad8d-44de-9b97-9bcd1d296de4,Anshul Kamboj,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2025-01-26 06:19:35.443637+00
+711f233c-5652-41bc-82dd-95fd534bec56,Himmat Singh,Versatile Batsman,India,5000000,Versatile India batsman capable of adapting to various match situations,FALSE,2024-03-14 03:33:06.442689+00
+3fc85c28-f44c-48dc-94ca-35a37b541c7b,Shaik Rasheed,Aggressive Batsman,India,5000000,Explosive India batsman known for aggressive stroke play and match-winning innings,FALSE,2024-11-07 23:32:31.924480+00
+87b78e12-aded-4ce5-8d17-fe35b37c6f20,Shubham Dubey,Power Hitter,India,5000000,Powerful India batsman with a reputation for clearing boundaries at will,FALSE,2024-09-16 09:33:54.137766+00
+53b341dd-11d7-4a8f-be04-3b66127d765a,Swastik Chikara,Power Hitter,India,5000000,Powerful India batsman with a reputation for clearing boundaries at will,FALSE,2024-09-28 17:03:36.371339+00
+36a38631-0331-4e99-a9ea-18f6b9a1d5ef,AM Ghazanfar,Fast Bowler,Afghanistan,5000000,Express Afghanistan fast bowler known for generating steep bounce and movement,TRUE,2025-04-15 04:25:10.137727+00
+79ae0893-c049-46bd-ba27-6e7326471007,Lockie Ferguson,Death Bowler,New Zealand,20000000,Experienced New Zealand death bowler with pinpoint accuracy under pressure,TRUE,2024-06-04 15:00:47.808851+00
+96114759-924e-4fb9-859c-8a8c564e3a99,Akash Deep,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2025-03-08 12:52:54.419082+00
+1b5adf9f-f506-4cb0-aea7-2932f7c09b45,Deepak Chahar,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2024-12-25 13:32:39.960618+00
+fc2e54fc-bc9c-4b50-b15e-85bf8d254aed,Mukesh Kumar,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2024-05-29 06:37:23.669311+00
+e8610755-c7bf-4dd4-8af0-7bbd067b9e72,Bhuvneshwar Kumar,Fast Bowler,India,20000000,Skillful India bowler with excellent control and variations in pace,FALSE,2025-01-11 06:59:13.710732+00
+376af5fb-6dac-42b7-b13b-e7867e669c66,Gerald Coetzee,Fast Bowler,South Africa,20000000,Express South Africa fast bowler known for generating steep bounce and movement,TRUE,2025-05-12 18:53:38.011720+00
+f87196e5-60f9-45e3-8a69-26d72b78011f,Tushar Deshpande,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2024-10-23 23:19:02.993224+00
+ee675442-5a29-42d9-9bc1-16605d6e6bd5,Donovan Ferreira,Middle-order Batsman,South Africa,20000000,Dynamic South Africa middle-order batsman who excels in pressure situations,TRUE,2024-10-31 01:35:40.453284+00
+ba95a63e-1548-4bf1-b1d2-575ee1628bf7,Josh Inglis,Versatile Batsman,Australia,20000000,Versatile Australia batsman capable of adapting to various match situations,TRUE,2024-09-22 11:49:08.852488+00
+8e16db95-e275-4d05-813c-794ffc644e64,Ryan Rickelton,Power Hitter,South Africa,20000000,Powerful South Africa batsman with a reputation for clearing boundaries at will,TRUE,2024-12-31 20:26:32.285976+00
+cbac6787-775f-4b95-9866-9b4bd9825d1f,Nitish Rana,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2024-12-03 11:36:37.986444+00
+a74da7db-2d60-4e84-be8c-223a0deb6922,Krunal Pandya,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2024-01-17 20:32:12.716623+00
+102edd35-93dd-4dcc-867e-764c054eba72,Marco Jansen,Complete All-rounder,South Africa,20000000,Complete South Africa all-rounder who contributes equally with bat and ball,TRUE,2024-08-30 23:21:35.564707+00
+4a6fe328-8d77-430e-856c-a0f187a98afe,Sam Curran,Batting All-rounder,England,20000000,Dynamic England all-rounder with explosive batting and clever bowling variations,TRUE,2024-04-28 15:55:52.613000+00
+0ac1cf6d-ce6a-4b69-a8ff-ad92cbed3a05,Washington Sundar,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-08-16 06:50:59.927687+00
+806563a0-7774-4486-b352-7bedd52bc9fa,Ajinkya Rahane,Aggressive Batsman,India,5000000,Explosive India batsman known for aggressive stroke play and match-winning innings,FALSE,2024-03-31 08:40:50.720957+00
+190864a7-5836-4a74-b9b8-2b000cb56a4f,Faf du Plessis,Aggressive Batsman,South Africa,20000000,Explosive South Africa batsman known for aggressive stroke play and match-winning innings,TRUE,2024-04-25 16:19:05.537912+00
+bdb57206-251f-40d5-849c-23f387cab38d,Rovman Powell,Aggressive Batsman,West Indies,20000000,Explosive West Indies batsman known for aggressive stroke play and match-winning innings,TRUE,2024-11-06 15:09:05.206092+00
+398e51ac-5c97-4bac-bac3-ac031c19bd01,Glenn Phillips,Aggressive Batsman,New Zealand,20000000,Explosive New Zealand batsman known for aggressive stroke play and match-winning innings,TRUE,2024-02-19 05:30:17.689371+00
+be05ec3b-70c6-49e2-9666-df9791a8cadf,Shreyas Gopal,Spinner,India,5000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2024-10-04 18:46:07.314574+00
+fb21b218-9252-4227-8043-9099876fb4eb,Manav Suthar,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2024-10-20 23:28:33.623982+00
+4ae7c161-a974-4aed-8a19-3cae473b7b5e,Kumar Kartikeya,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2024-08-19 06:26:16.877026+00
+1f2b96f8-1732-4bf4-aa0e-d31b4afb304c,Mayank Markande,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2024-11-05 23:20:07.811377+00
+411a129c-82e0-44ef-bbf5-cd962bfd6a69,Karn Sharma,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2025-05-25 18:37:04.163372+00
+380117e2-0cf5-4edd-aeda-d2dc9c257c48,Suyash Sharma,Spinner,India,5000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2024-03-01 07:01:31.963021+00
+4341c2d8-04af-457a-bde8-afe8bba0aa94,Simarjeet Singh,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2025-02-25 22:13:51.659950+00
+e8067cbe-ae7d-4ed4-a134-e30c02fd2a64,Yash Thakur,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2024-10-09 05:58:26.359461+00
+b79dfc73-fe3d-4962-ad04-6f30c0565e2d,Vaibhav Arora,Spinner,India,5000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2024-09-16 21:54:02.424711+00
+eab5824f-f7e2-4718-b0b9-cbed04fceac4,Vijaykumar Vyshak,Fast Bowler,India,5000000,Express India fast bowler known for generating steep bounce and movement,FALSE,2025-06-17 08:46:42.981728+00
+1f5f3ed5-ff32-4fed-aeac-9595765b0f68,Mohit Sharma,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2025-04-23 17:50:24.331087+00
+17e72ae1-1244-4b68-a1e3-5af6104f1602,Akash Madhwal,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2025-02-17 14:09:39.910572+00
+77a1aad5-2522-4bcb-8cae-8be7383f4906,Rasikh Salam,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2024-12-23 17:33:26.201829+00
+59b659e3-11c3-425f-8458-5d76deb5f045,Vishnu Vinod,Middle-order Batsman,India,5000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2025-06-13 21:45:25.696929+00
+e13e239c-3843-4d57-a072-f16209562f61,Luvnith Sisodia,Power Hitter,India,5000000,Powerful India batsman with a reputation for clearing boundaries at will,FALSE,2024-09-02 13:12:17.074087+00
+b874c909-12b5-4f26-93d8-5178a445232c,Aryan Juyal,Versatile Batsman,India,5000000,Versatile India batsman capable of adapting to various match situations,FALSE,2025-03-15 11:06:47.903480+00
+4c411729-a7c0-4c80-b67a-0e5f407c1ba8,Anuj Rawat,Versatile Batsman,India,5000000,Versatile India batsman capable of adapting to various match situations,FALSE,2025-04-27 06:14:50.622664+00
+ae4e442e-f102-4beb-a829-7f1c0f00631c,Robin Minz,Aggressive Batsman,India,5000000,Explosive India batsman known for aggressive stroke play and match-winning innings,FALSE,2025-03-25 01:19:55.973977+00
+acbbc449-cd6b-423d-984e-b2f1e2421ff8,Kumar Kushagra,Versatile Batsman,India,5000000,Versatile India batsman capable of adapting to various match situations,FALSE,2024-08-09 10:00:43.274789+00
+8c05febd-d248-4576-89eb-bbf927cc32a3,Ashutosh Sharma,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2024-11-12 02:34:10.908572+00
+c8d18c2b-c8ab-42ad-87c2-952a3bc9efd8,Mahipal Lomror,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2025-04-07 09:18:52.480092+00
+cef8a9d5-7d56-4ae7-b7e6-1e52fa09eedd,Vijay Shankar,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2024-06-27 16:11:37.296729+00
+4e1f3ee8-34cf-4031-b626-e1291ae0ddb2,Harpreet Brar,Versatile All-rounder,India,5000000,Versatile India player known for match-changing performances in all departments,FALSE,2025-04-02 04:51:27.925358+00
+bbd5d649-900c-4d71-8a9c-65cf7bfbb8c5,Abdul Samad,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-02-13 21:41:24.299845+00
+d810b749-9983-4bbc-aab8-3424b84279bc,Naman Dhir,Batting All-rounder,India,5000000,Dynamic India all-rounder with explosive batting and clever bowling variations,FALSE,2025-02-11 05:31:20.032952+00
+3254f697-1e42-4b57-805c-d0ce47f462b1,Sameer Rizvi,Batting All-rounder,India,5000000,Dynamic India all-rounder with explosive batting and clever bowling variations,FALSE,2024-03-13 13:44:17.200162+00
+86eaa1cc-d2e3-490f-bccf-6ea98704cbf8,Nishant Sindhu,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2024-06-13 23:59:01.833619+00
+7f71f8c1-cad3-4570-84c1-bf6522700dbe,Abhinav Manohar,Aggressive Batsman,India,5000000,Explosive India batsman known for aggressive stroke play and match-winning innings,FALSE,2024-09-15 15:37:06.690797+00
+a4ec35c5-b055-4a06-b281-192bf2cc790c,Karun Nair,Opening Batsman,India,5000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-04-10 10:34:57.206111+00
+c206f9d2-4af4-4283-9ae6-4a8f6e4e6053,Angkrish Raghuvanshi,Middle-order Batsman,India,5000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2025-03-09 11:52:17.981564+00
+9cd015a1-c536-4d8a-9838-8386de8c5b70,Nehal Wadhera,Versatile Batsman,India,5000000,Versatile India batsman capable of adapting to various match situations,FALSE,2025-04-23 17:56:20.875386+00
+80e24600-e27d-450e-9eed-593c9c60e16c,Atharva Taide,Versatile Batsman,India,5000000,Versatile India batsman capable of adapting to various match situations,FALSE,2024-10-04 00:46:18.959556+00
+6000138e-1a12-486f-8749-448f65a46d73,Noor Ahmad,Death Bowler,Afghanistan,20000000,Experienced Afghanistan death bowler with pinpoint accuracy under pressure,TRUE,2024-07-06 19:01:06.467562+00
+072b2bb0-29df-43d3-8b70-e1d88d34824a,Wanindu Hasaranga,Spinner,Sri Lanka,20000000,Crafty Sri Lanka spinner who can turn the ball both ways with precision,TRUE,2024-05-15 22:40:32.004016+00
+306906f9-3cf6-45ab-a649-879605fd7f6d,Adam Zampa,Spinner,Australia,20000000,Crafty Australia spinner who can turn the ball both ways with precision,TRUE,2024-12-10 20:23:12.388685+00
+8831e0ef-b2f2-47f9-90b8-9f4e92718349,Rahul Chahar,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2024-06-08 10:37:00.642494+00
+46faac31-fe2a-4c5a-88a1-8fe9701282bc,Maheesh Theekshana,Fast Bowler,Sri Lanka,20000000,Skillful Sri Lanka bowler with excellent control and variations in pace,TRUE,2025-03-22 04:05:05.300919+00
+d611d19a-779b-4c44-a879-a9600db8e1c2,Trent Boult,Fast Bowler,New Zealand,20000000,Skillful New Zealand bowler with excellent control and variations in pace,TRUE,2024-10-05 18:14:23.981107+00
+f4a62611-025f-4ddb-b9eb-45ef229d7460,T Natarajan,Fast Bowler,India,5000000,Express India fast bowler known for generating steep bounce and movement,FALSE,2024-11-09 11:55:36.517815+00
+bc3d9529-d25a-472e-b5b1-a7bf4660286f,Khaleel Ahmed,Spinner,India,5000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2024-05-23 15:55:05.164351+00
+331bbdcf-819c-4425-ac84-887f3b6bb18c,Jofra Archer,Fast Bowler,England,20000000,Emerging England bowler with raw pace and natural swing,TRUE,2025-02-08 22:46:05.748168+00
+02eb67b7-1b15-4b2e-a96e-f7193393b0db,Anrich Nortje,Death Bowler,South Africa,20000000,Experienced South Africa death bowler with pinpoint accuracy under pressure,TRUE,2024-05-18 23:02:34.009538+00
+c618ad88-fe92-40e9-aa1b-f45a75cdbe54,Avesh Khan,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2025-05-27 18:59:20.477589+00
+dc047cab-bd15-4da7-9312-ac6b9d753b28,Prasidh Krishna,Fast Bowler,India,5000000,Emerging India bowler with raw pace and natural swing,FALSE,2025-04-01 07:31:00.040594+00
+bd9dd978-0ea8-42f5-8e90-4d4cbc4f0890,Josh Hazlewood,Fast Bowler,Australia,20000000,Emerging Australia bowler with raw pace and natural swing,TRUE,2024-07-03 18:10:11.569628+00
+9f5a8711-1dd8-4e65-badb-a0fcb79eb048,Jitesh Sharma,Aggressive Batsman,India,5000000,Explosive India batsman known for aggressive stroke play and match-winning innings,FALSE,2025-02-01 02:26:42.728959+00
+59477a4e-2c68-440b-a37f-066b7c89a23d,Ishan Kishan,Middle-order Batsman,India,20000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2024-09-14 22:30:25.764234+00
+f44e8415-e839-4761-8ceb-eb7b215297d6,Rahmanullah Gurbaz,Middle-order Batsman,Afghanistan,20000000,Dynamic Afghanistan middle-order batsman who excels in pressure situations,TRUE,2024-04-05 12:02:10.713200+00
+435903c1-1ab7-463f-b905-753683cdd2e9,Phil Salt,Power Hitter,England,20000000,Powerful England batsman with a reputation for clearing boundaries at will,TRUE,2025-01-21 17:05:57.947382+00
+33693cc3-c1c4-4b46-b4cc-390d21e7801a,Quinton de Kock,Versatile Batsman,South Africa,20000000,Versatile South Africa batsman capable of adapting to various match situations,TRUE,2024-05-01 15:06:57.059138+00
+d4f5ec4a-1c4a-4dca-b296-1791ed5c6961,Glenn Maxwell,Fielding All-rounder,Australia,20000000,Athletic Australia all-rounder with exceptional fielding skills and game awareness,TRUE,2025-03-01 09:32:09.998533+00
+f9b2eea2-0b6e-4259-a1c4-5d0e60339386,Mitchell Marsh,Utility Player,Australia,20000000,Reliable Australia utility player who provides balance to the team composition,TRUE,2024-11-17 06:23:33.692173+00
+de08aff5-f52f-487f-8ba6-6799671252f2,Marcus Stoinis,Versatile All-rounder,Australia,20000000,Versatile Australia player known for match-changing performances in all departments,TRUE,2025-04-13 18:05:27.068882+00
+8fc28c12-2681-4273-b847-2355a8f6e2fd,Venkatesh Iyer,Versatile All-rounder,India,5000000,Versatile India player known for match-changing performances in all departments,FALSE,2025-03-15 21:19:51.942848+00
+6b03bb9e-9a09-4d6f-915d-4ea21608bdfb,Ravichandran Ashwin,Complete All-rounder,India,20000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2024-02-13 18:41:18.130246+00
+5403a0ac-1bb0-4e23-8ce8-2c4f0648de8a,Rachin Ravindra,Utility Player,New Zealand,20000000,Reliable New Zealand utility player who provides balance to the team composition,TRUE,2025-03-15 07:36:55.059212+00
+f82bcfed-81eb-4b5c-a29d-8043cb3d495a,Harshal Patel,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-09-02 20:04:58.815069+00
+c0edf28a-c85b-4f8e-abdd-e7277006c3d7,Jake Fraser-McGurk,Power Hitter,Australia,20000000,Powerful Australia batsman with a reputation for clearing boundaries at will,TRUE,2025-01-02 04:46:42.209030+00
+97427161-3f11-45c1-8188-4ea86874b604,Rahul Tripathi,Middle-order Batsman,India,5000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2024-09-20 11:34:14.396276+00
+f2d3b4bc-df7a-416c-aac6-e3e0d3f20eba,Devon Conway,Opening Batsman,New Zealand,20000000,Stylish New Zealand top-order batsman with excellent technique against pace and spin,TRUE,2025-05-05 01:03:01.405567+00
+70fcd2a1-01aa-4df4-9d16-fd46e136a481,Aiden Markram,Power Hitter,South Africa,20000000,Powerful South Africa batsman with a reputation for clearing boundaries at will,TRUE,2025-06-12 13:56:05.594488+00
+070e537e-5b27-407f-b9b9-f1c5ce2b1eb6,Devdutt Padikkal,Aggressive Batsman,India,5000000,Explosive India batsman known for aggressive stroke play and match-winning innings,FALSE,2024-10-10 05:08:41.556336+00
+68b9565b-9de6-4ebe-a05b-c208a280e7d2,Harry Brook,Opening Batsman,England,20000000,Stylish England top-order batsman with excellent technique against pace and spin,TRUE,2024-09-11 05:15:58.366123+00
+8aa41c03-2d7c-44b6-af12-159ffff7a4af,KL Rahul,Power Hitter,India,20000000,Powerful India batsman with a reputation for clearing boundaries at will,FALSE,2024-08-13 10:19:27.383933+00
+c7179272-d6ce-4d30-a5b6-f94568ec7f55,Liam Livingstone,Utility Player,England,20000000,Reliable England utility player who provides balance to the team composition,TRUE,2025-03-09 17:10:15.164160+00
+f7179f47-cb62-4b14-8636-556572f19506,Mohammed Siraj,Death Bowler,India,20000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2024-06-18 15:42:49.291855+00
+528f6ee0-6c3e-419c-b3dd-cf3b63d859f9,Yuzvendra Chahal,Death Bowler,India,20000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2025-05-02 07:24:44.768894+00
+c52d57dd-ea34-4cfc-8eb4-b9960c5d31ee,David Miller,Aggressive Batsman,South Africa,20000000,Explosive South Africa batsman known for aggressive stroke play and match-winning innings,TRUE,2024-06-23 20:21:03.227445+00
+5cb04fc3-7949-465d-b973-419e43165f8d,Mohammed Shami,Fast Bowler,India,20000000,Emerging India bowler with raw pace and natural swing,FALSE,2024-05-15 05:28:23.866482+00
+201f5db8-2d96-4852-8b20-cce4260b68ec,Rishabh Pant,Opening Batsman,India,20000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-11-15 14:49:06.471605+00
+f2c2ea1f-78e1-409e-961b-e58c41e3835d,Mitchell Starc,Fast Bowler,Australia,20000000,Emerging Australia bowler with raw pace and natural swing,TRUE,2025-02-21 17:29:30.123780+00
+c7d8b841-d4d3-41b4-ba58-90578ff56f23,Jos Buttler,Power Hitter,England,20000000,Powerful England batsman with a reputation for clearing boundaries at will,TRUE,2025-04-02 06:07:14.013927+00
+412b697e-7b54-4ba0-afb6-7d8b59dba78b,Shreyas Iyer,Middle-order Batsman,India,20000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2024-08-04 05:21:19.623154+00
+3988de0e-8689-4bdb-8415-083e1c3e00ac,Kagiso Rabada,Fast Bowler,South Africa,20000000,Express South Africa fast bowler known for generating steep bounce and movement,TRUE,2025-03-18 16:19:20.988699+00
+51a3aa0d-e9aa-4a14-95f5-d7ae7e7a11f7,Arshdeep Singh,Spinner,India,20000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2024-03-26 01:00:28.991282+00
+40ca6a3f-c52a-4f1b-85bf-f99462230c10,Prabhsimran Singh,Opening Batsman,India,5000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-04-29 07:18:21.031767+00
+c2a4e8ed-003d-47bb-88c2-6cbc8f8c26c5,Shashank Singh,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-09-06 19:17:21.505773+00
+bb934fd5-2638-4cc0-b346-7786400ccde6,Ayush Badoni,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2025-04-14 21:04:06.339937+00
+ebc3adda-5b64-419e-b4e2-c4beb7cde01d,Mohsin Khan,Spinner,India,5000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2025-06-26 07:02:34.255124+00
+be70e0b2-eed2-4c64-a93b-41125c121944,Mayank Yadav,Fast Bowler,India,5000000,Express India fast bowler known for generating steep bounce and movement,FALSE,2024-06-13 20:31:50.073038+00
+3fb2e40d-0998-45df-80fa-b8e148ddfbcb,Ravi Bishnoi,Death Bowler,India,5000000,Experienced India death bowler with pinpoint accuracy under pressure,FALSE,2025-01-14 23:58:02.912875+00
+95a6b3f3-dc0f-49b4-a648-412775d843c1,Nicholas Pooran,Opening Batsman,India,20000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-11-24 19:25:14.071549+00
+8b9d1801-788a-4db9-b3cf-cf74a261518e,M Shahrukh Khan,Complete All-rounder,India,5000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2025-05-22 00:04:15.247951+00
+2a12d4ca-5345-4662-b623-3f23b7c15b6a,Rahul Tewatia,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-03-19 05:42:48.544509+00
+780fb73e-ca9d-42ea-9522-89ab23f786b7,Sai Sudharsan,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2024-10-12 02:43:16.418185+00
+7cb7a708-af6e-4838-82e0-114ef0b8b14a,Shubman Gill,Opening Batsman,India,20000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-03-15 07:04:24.942421+00
+53783b74-369c-4812-a2b2-fe57f8c78b38,Rashid Khan,Spinner,Afghanistan,20000000,Crafty Afghanistan spinner who can turn the ball both ways with precision,TRUE,2024-11-02 23:27:48.523683+00
+53978ee6-96b8-4e7c-a63d-13f6a2e609d1,Sandeep Sharma,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2024-11-21 03:32:09.929349+00
+11e0f002-08e5-43a8-92db-6b9d719bbc95,Shimron Hetmyer,Versatile Batsman,West Indies,20000000,Versatile West Indies batsman capable of adapting to various match situations,TRUE,2024-10-31 05:01:05.109813+00
+40571689-ef6e-4978-b38e-1d76836feae4,Dhruv Jurel,Opening Batsman,India,5000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-12-21 03:32:49.304504+00
+77223adb-dee7-4952-ac57-1eead711fd2d,Riyan Parag,Fielding All-rounder,India,5000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2024-10-16 21:39:04.227314+00
+98f0667f-e7ac-43fc-9803-f105f875a531,Yashasvi Jaiswal,Utility Player,India,20000000,Reliable India utility player who provides balance to the team composition,FALSE,2025-06-26 13:43:35.919241+00
+bae74155-04c0-4225-b770-a5d8fdbe2bdc,Sanju Samson,Opening Batsman,India,5000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-09-15 00:34:19.985364+00
+42c8aaa2-fbaf-493e-98ce-ac7b9c3035ca,Ramandeep Singh,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-03-11 20:39:46.808760+00
+88fc8b7e-e38a-4cb8-ab8d-8cd0d5bebdd0,Harshit Rana,Spinner,India,5000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2024-09-08 19:36:24.315233+00
+d98916bf-f54d-4f6e-aa8d-305b844e945b,Andre Russell,Versatile All-rounder,West Indies,20000000,Versatile West Indies player known for match-changing performances in all departments,TRUE,2024-06-23 22:26:51.251275+00
+b9000e8b-5d8c-4c7e-85c8-89f1e67b89d7,Sunil Narine,Fast Bowler,India,20000000,Emerging India bowler with raw pace and natural swing,FALSE,2025-02-04 10:41:27.902104+00
+a5620015-2084-4318-8da9-ee3f9204e3a1,Varun Chakravarthy,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2025-02-22 21:01:04.408776+00
+1182a8ad-aeaa-44cc-addb-240431416a98,Rinku Singh,Middle-order Batsman,India,20000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2025-02-15 22:52:15.781109+00
+f8ccedb6-337a-4609-a00f-e661735f4612,Abishek Porel,Opening Batsman,India,5000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-12-14 20:47:07.697089+00
+2da9b2bc-9622-48ff-a54d-94906b578b51,Tristan Stubbs,Versatile Batsman,India,20000000,Versatile India batsman capable of adapting to various match situations,FALSE,2024-10-30 13:47:40.509753+00
+9a67b44a-8f87-467b-a63c-5f213b8d74fc,Kuldeep Yadav,Spinner,India,20000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2025-05-17 11:27:50.195053+00
+9b4dc6ab-fe42-4f7a-bd6d-c14e876a8ee5,Axar Patel,Utility Player,India,20000000,Reliable India utility player who provides balance to the team composition,FALSE,2025-03-17 10:26:23.399268+00
+bd2e1470-8c6a-4871-a77c-0b9c47cb8910,MS Dhoni,Middle-order Batsman,India,20000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2024-04-26 21:19:45.134860+00
+7f2abd63-0a9c-4f8e-b35a-05ceaba43c99,Shivam Dube,Batting All-rounder,India,5000000,Dynamic India all-rounder with explosive batting and clever bowling variations,FALSE,2024-01-24 17:59:58.115145+00
+a3abd7ca-3473-4ca7-af38-6f48b641141a,Matheesha Pathirana,Fast Bowler,India,5000000,Skillful India bowler with excellent control and variations in pace,FALSE,2024-08-04 22:35:17.472118+00
+a3a4e5d4-7381-46f7-abd5-44727038e5cc,Ravindra Jadeja,Utility Player,India,5000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-11-26 23:44:35.273852+00
+350e3e40-fe9e-409e-8b40-939059922862,Ruturaj Gaikwad,Opening Batsman,India,5000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-05-09 19:01:48.205108+00
+213fd31b-f253-43cf-8776-23007e445298,Nitish Kumar Reddy,Batting All-rounder,India,20000000,Dynamic India all-rounder with explosive batting and clever bowling variations,FALSE,2024-04-04 04:23:45.975521+00
+8a9ff3b3-221d-4635-87c8-d98819f95530,Travis Head,Aggressive Batsman,India,20000000,Explosive India batsman known for aggressive stroke play and match-winning innings,FALSE,2024-11-07 22:52:37.385879+00
+388e3e17-1231-457a-ab7f-dd271fb53e1d,Abhishek Sharma,Utility Player,India,20000000,Reliable India utility player who provides balance to the team composition,FALSE,2024-06-22 19:35:59.582208+00
+33af8ece-f247-466b-9708-a2dbc270bdc0,Pat Cummins,Batting All-rounder,Australia,20000000,Dynamic Australia all-rounder with explosive batting and clever bowling variations,TRUE,2024-03-16 04:53:13.946144+00
+ad2484df-5a98-49e9-82e5-64a49ba9a004,Heinrich Klaasen,Versatile Batsman,India,20000000,Versatile India batsman capable of adapting to various match situations,FALSE,2025-05-10 16:34:45.696247+00
+caa187b0-9557-423d-8773-3ca95f3c8412,Tilak Varma,Fielding All-rounder,India,20000000,Athletic India all-rounder with exceptional fielding skills and game awareness,FALSE,2024-10-26 22:03:54.512365+00
+14636c25-1ff1-4bf9-9d3b-226f6dc08201,Rohit Sharma,Middle-order Batsman,India,20000000,Dynamic India middle-order batsman who excels in pressure situations,FALSE,2025-04-29 01:03:31.148916+00
+57c4faf1-2eb9-4792-b8ff-864798359993,Hardik Pandya,Complete All-rounder,India,20000000,Complete India all-rounder who contributes equally with bat and ball,FALSE,2024-03-14 07:59:39.069424+00
+676e6f59-c809-45b6-994f-cfd06d9e028a,Suryakumar Yadav,Aggressive Batsman,India,20000000,Explosive India batsman known for aggressive stroke play and match-winning innings,FALSE,2024-09-04 12:06:19.534383+00
+cd8c2d7c-980e-45bb-b08c-df54f2312c27,Jasprit Bumrah,Spinner,India,20000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2025-01-13 14:51:30.875030+00
+24cbf733-3639-4bc7-880e-2355065903a2,Yash Dayal,Spinner,India,5000000,Crafty India spinner who can turn the ball both ways with precision,FALSE,2025-04-22 12:11:50.691069+00
+b9addddc-23b4-49fc-8dfd-18e427dc04f2,Rajat Patidar,Opening Batsman,India,5000000,Stylish India top-order batsman with excellent technique against pace and spin,FALSE,2024-02-25 03:21:24.681555+00
+86053169-d0fc-4a10-9b8f-6dbcc7644830,Virat Kohli,Power Hitter,India,20000000,Powerful India batsman with a reputation for clearing boundaries at will,FALSE,2025-06-09 00:48:41.645763+00
