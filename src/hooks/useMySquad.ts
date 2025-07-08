@@ -56,40 +56,53 @@ export function useMySquad(roomId: string, participantId: string | null) {
     try {
       setLoading(true);
 
-      const { data: purchasedPlayers, error } = await supabase
+      // First, get the auction players for this participant
+      const { data: auctionPlayers, error: auctionError } = await supabase
         .from('auction_players')
-        .select(`
-          id,
-          player_id,
-          final_price,
-          players!inner(
-            id,
-            name,
-            role,
-            country,
-            base_price
-          )
-        `)
+        .select('id, player_id, final_price')
         .eq('auction_room_id', roomId)
         .eq('participant_id', participantId);
 
-      if (error) {
-        console.error('Error loading squad:', error);
+      if (auctionError) {
+        console.error('Error loading auction players:', auctionError);
         return;
       }
 
-      const transformedPlayers = purchasedPlayers?.map((item: any) => ({
-        id: item.id,
-        player_id: item.player_id,
-        final_price: item.final_price,
-        player: {
-          id: item.players.id,
-          name: item.players.name,
-          role: item.players.role,
-          country: item.players.country,
-          base_price: item.players.base_price
-        }
-      })) || [];
+      if (!auctionPlayers || auctionPlayers.length === 0) {
+        setMyPlayers([]);
+        setTotalSpent(0);
+        setPlayersCount(0);
+        return;
+      }
+
+      // Then, get the player details for each purchased player
+      const playerIds = auctionPlayers.map(ap => ap.player_id);
+      const { data: playerDetails, error: playersError } = await supabase
+        .from('players')
+        .select('id, name, role, country, base_price')
+        .in('id', playerIds);
+
+      if (playersError) {
+        console.error('Error loading player details:', playersError);
+        return;
+      }
+
+      // Combine the data
+      const transformedPlayers = auctionPlayers.map(auctionPlayer => {
+        const playerDetail = playerDetails?.find(p => p.id === auctionPlayer.player_id);
+        return {
+          id: auctionPlayer.id,
+          player_id: auctionPlayer.player_id,
+          final_price: auctionPlayer.final_price,
+          player: {
+            id: playerDetail?.id || auctionPlayer.player_id,
+            name: playerDetail?.name || 'Unknown Player',
+            role: playerDetail?.role || 'Unknown',
+            country: playerDetail?.country || 'Unknown',
+            base_price: playerDetail?.base_price || 0
+          }
+        };
+      });
 
       setMyPlayers(transformedPlayers);
       setPlayersCount(transformedPlayers.length);
@@ -141,13 +154,16 @@ export function useMySquad(roomId: string, participantId: string | null) {
         table: 'auction_players',
         filter: `auction_room_id=eq.${roomId}`
       }, (payload) => {
+        console.log('🏏 Squad: Player sales changed, refreshing squad...');
         // Check if this change affects current participant
         if (payload.new?.participant_id === participantId ||
             payload.old?.participant_id === participantId) {
-          loadMyPlayers(); // Reload when squad changes
+          loadMyPlayers(); // Immediately reload when squad changes
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🏏 Squad subscription status:', status);
+      });
 
     return () => {
       subscription.unsubscribe();

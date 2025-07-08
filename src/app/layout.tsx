@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IPL Auction Game",
-  description: "Real-time IPL auction game with friends",
+  title: "CrickRush",
+  description: "Experience the thrill of IPL auctions in real-time",
 };
 
 export default function RootLayout({
@@ -31,13 +31,13 @@ export default function RootLayout({
         {/* Mobile Restriction Overlay */}
         <div className="mobile-restriction">
           <div className="restriction-content">
-            <div className="restriction-logo">IPL Auction</div>
+            <div className="restriction-logo">CrickRush</div>
             <div className="restriction-icon">🖥️</div>
             <h1 className="restriction-title">
               Please access this application on a desktop or a device with a screen width of at least 900px for the best experience.
             </h1>
             <p className="restriction-message">
-              This IPL auction game is designed for larger screens to provide the optimal bidding experience with all features fully accessible.
+              This CrickRush auction game is designed for larger screens to provide the optimal bidding experience with all features fully accessible.
             </p>
             <div className="restriction-future">
               Mobile support will be available in future updates.

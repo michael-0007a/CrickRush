@@ -271,13 +271,20 @@ export default function Dashboard() {
         return;
       }
 
-      // Check if user is already a participant
-      const { data: existingParticipant } = await supabase
-        .from('auction_participants')
-        .select('*')
-        .eq('auction_room_id', room.id)
-        .eq('user_id', user.id)
-        .single();
+      // Check if user is already a participant - handle RLS errors gracefully
+      let existingParticipant = null;
+      try {
+        const { data: participant } = await supabase
+          .from('auction_participants')
+          .select('*')
+          .eq('auction_room_id', room.id)
+          .eq('user_id', user.id)
+          .single();
+        existingParticipant = participant;
+      } catch (participantError) {
+        console.warn('Could not check existing participation (RLS issue?):', participantError);
+        // Continue anyway - user might need to join
+      }
 
       if (existingParticipant) {
         // User already joined - go directly to auction room
@@ -431,7 +438,7 @@ export default function Dashboard() {
           <div className="nav-content">
             <a href="/dashboard" className="nav-brand">
               <Trophy className="w-6 h-6" />
-              <span>IPL Auction</span>
+              <span>CrickRush</span>
             </a>
 
             <div className="nav-actions">

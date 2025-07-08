@@ -8,13 +8,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuctionRealtime } from '@/hooks/useAuctionRealtime';
-import { useAuctionTimer } from '@/hooks/useAuctionTimer';
 import { useMySquad } from '@/hooks/useMySquad';
 import FranchiseLogo from '@/components/FranchiseLogo';
 import {
   Trophy, Users, Pause, Play, SkipForward, LogOut,
   Crown, Timer, User, ChevronDown, Trash2
 } from 'lucide-react';
+import BiddingHistory from '@/components/BiddingHistory';
 
 interface AuctionRoom {
   id: string;
@@ -82,85 +82,18 @@ export default function LiveAuctionClient() {
   const [customBidAmount, setCustomBidAmount] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
-  // Use new hooks - FIXED to use event-driven updates
+  // Use the enhanced real-time hook for complete synchronization
   const {
     auctionState,
-    loading: auctionLoading
+    participants,
+    recentBids,
+    loading: auctionLoading,
+    error: auctionError,
+    isConnected,
+    auctionControls,
+    biddingActions,
+    refresh
   } = useAuctionRealtime(room?.id || '', user?.id || null);
-
-  // Use the new synchronized timer hook
-  const {
-    timeRemaining,
-    isRunning: timerRunning,
-    loading: timerLoading,
-    hasExpired,
-    startTimer,
-    stopTimer,
-    resetTimer,
-    addTime
-  } = useAuctionTimer(room?.id || '', isAuctioneer);
-
-  // FIXED: Load participants directly since the hook is failing with 406 errors
-  const [participants, setParticipants] = useState<Participant[]>([]);
-
-  // Load participants directly
-  useEffect(() => {
-    const loadParticipants = async () => {
-      if (!room?.id) return;
-
-      try {
-        const { data: participantData, error } = await supabase
-          .from('auction_participants')
-          .select(`
-            *,
-            ipl_franchises (
-              id,
-              name,
-              short_name,
-              color,
-              logo,
-              city
-            )
-          `)
-          .eq('auction_room_id', room.id);
-
-        if (error) {
-          // Handle error silently
-        } else {
-          // Map the franchise data properly to the participant
-          const mappedParticipants = participantData?.map(participant => ({
-            ...participant,
-            team_short_name: participant.ipl_franchises?.short_name,
-            team_name: participant.ipl_franchises?.name,
-            team_color: participant.ipl_franchises?.color,
-            team_logo: participant.ipl_franchises?.logo,
-            team_city: participant.ipl_franchises?.city
-          })) || [];
-
-          setParticipants(mappedParticipants);
-        }
-      } catch (error) {
-        // Handle error silently
-      }
-    };
-
-    loadParticipants();
-
-    // Set up real-time subscription to reload participants when changes occur
-    const channel = supabase
-      .channel('participants-changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'auction_participants', filter: `auction_room_id=eq.${room?.id}` },
-        () => {
-          loadParticipants();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [room?.id]);
 
   // Get myParticipant from participants
   const myParticipant = participants.find(p => p.user_id === user?.id);
@@ -244,144 +177,91 @@ export default function LiveAuctionClient() {
     initializeApp();
   }, [roomKey, router]);
 
-  // Check if user needs to join auction - FIXED to prevent infinite loops
-  useEffect(() => {
-    if (loading || auctionLoading || !room || !user) {
-      return;
-    }
+  // Calculate time remaining for display
+  const timeRemaining = auctionState?.time_remaining || 0;
+  const isRunning = auctionState?.is_active && !auctionState?.is_paused;
 
-    // Don't redirect - just log the status
-    if (!myParticipant && !isAuctioneer) {
-      // User needs to join but staying on this page to avoid infinite loop
-    }
-  }, [room, user, loading, auctionLoading, myParticipant, isAuctioneer, participants]);
-
-  // Load available teams for selection
-  const loadAvailableTeams = async () => {
-    if (!room) return;
+  // Handle team selection
+  const handleTeamSelection = async (teamId: string) => {
+    if (!room?.id || !user?.id) return;
 
     try {
-      // Get all franchises
-      const { data: franchises } = await supabase
-        .from('ipl_franchises')
-        .select('*')
-        .order('name');
-
-      // Get taken teams
-      const { data: takenTeams } = await supabase
+      const { error } = await supabase
         .from('auction_participants')
-        .select('team_id')
+        .update({ team_id: teamId })
         .eq('auction_room_id', room.id)
-        .not('team_id', 'is', null);
+        .eq('user_id', user.id);
 
-      const takenTeamIds = new Set(takenTeams?.map(t => t.team_id) || []);
+      if (error) {
+        console.error('Error updating team:', error);
+        return;
+      }
 
-      const teamsWithAvailability = franchises?.map(team => ({
-        ...team,
-        available: !takenTeamIds.has(team.id)
-      })) || [];
-
-      setAvailableTeams(teamsWithAvailability);
+      setShowTeamSelector(false);
+      refresh(); // Force refresh to update data
     } catch (error) {
-      // Handle error silently
+      console.error('Error updating team:', error);
     }
   };
 
-  // Join auction with selected team
-  const joinWithTeam = async () => {
-    if (!room || !selectedTeam || !user) {
-      alert('Please select a team before joining');
-      return;
-    }
+  // Handle bidding
+  const handleBid = async (amount: number) => {
+    if (!myParticipant || !auctionState?.current_player) return;
 
     try {
-      const { data: insertedParticipant, error } = await supabase
-        .from('auction_participants')
-        .insert({
-          auction_room_id: room.id,
-          user_id: user.id,
-          team_id: selectedTeam,
-          budget_remaining: room.budget_per_team,
-          players_count: 0,
-          is_auctioneer: false
-        })
-        .select(`
-          *,
-          ipl_franchises (
-            id,
-            name,
-            short_name,
-            color,
-            logo,
-            city
-          )
-        `)
-        .single();
-
-      if (error) throw error;
-
-      setShowTeamSelector(false);
-      alert('Successfully joined the auction!');
-
-      // Reload the page to refresh participant data
-      window.location.reload();
-
+      await biddingActions.placeBid(amount);
+      setShowCustomBid(false);
+      setCustomBidAmount('');
     } catch (error) {
-      alert('Failed to join auction: ' + (error as Error).message);
+      console.error('Error placing bid:', error);
+    }
+  };
+
+  // Handle auction controls
+  const handleStartAuction = async () => {
+    try {
+      await auctionControls.startAuction();
+    } catch (error) {
+      console.error('Error starting auction:', error);
+    }
+  };
+
+  const handlePauseAuction = async () => {
+    try {
+      await auctionControls.pauseAuction();
+    } catch (error) {
+      console.error('Error pausing auction:', error);
+    }
+  };
+
+  const handleResumeAuction = async () => {
+    try {
+      await auctionControls.resumeAuction();
+    } catch (error) {
+      console.error('Error resuming auction:', error);
+    }
+  };
+
+  const handleNextPlayer = async () => {
+    try {
+      await auctionControls.nextPlayer();
+    } catch (error) {
+      console.error('Error moving to next player:', error);
+    }
+  };
+
+  const handleAddTime = async (seconds: number) => {
+    try {
+      await auctionControls.addTime(seconds);
+    } catch (error) {
+      console.error('Error adding time:', error);
     }
   };
 
   // Bidding functions
-  const placeBid = async (amount: number) => {
-    if (!room || !myParticipant || !auctionState?.current_player) {
-      throw new Error('Invalid auction state');
-    }
-
-    try {
-      // Update auction state - DO NOT manually update time_remaining
-      // Let the SQL trigger handle the 10-second increment automatically
-      const { error } = await supabase
-        .from('auction_state')
-        .update({
-          current_bid: amount,
-          leading_team: myParticipant.team_id
-          // Removed time_remaining update to allow SQL trigger to handle it
-        })
-        .eq('room_id', room.id);
-
-      if (error) throw error;
-
-      // Log the bid placement event
-      console.log(`Bid placed: ${amount} by ${myParticipant.team_short_name} (${myParticipant.id})`);
-
-      // Add time to the auction timer
-      addTime(10);
-
-    } catch (error) {
-      alert('Bid placement failed: ' + (error as Error).message);
-    }
-  };
-
   const handleQuickBid = async () => {
-    if (!auctionState?.current_player) {
-      alert('No player is currently being auctioned');
-      return;
-    }
-
-    // Check if user has joined the auction
-    if (!myParticipant) {
-      alert('You need to join the auction first before placing bids');
-      return;
-    }
-
-    if (!myParticipant.team_id) {
-      alert('You need to select a team before placing bids. Please refresh the page and try again.');
-      return;
-    }
-
-    // Check player limit before bidding
-    if (myPlayers.length >= room.players_per_team) {
-      alert(`You cannot bid anymore! You have reached the maximum limit of ${room.players_per_team} players per team.`);
+    if (!auctionState?.current_player || !myParticipant) {
+      alert('Cannot place bid at this time');
       return;
     }
 
@@ -390,18 +270,10 @@ export default function LiveAuctionClient() {
         ? auctionState.current_player.base_price
         : auctionState.current_bid + (auctionState.current_bid < 200 ? 25 : 100);
 
-      await placeBid(amount);
+      await biddingActions.placeBid(amount);
     } catch (error) {
-      const errorMessage = (error as Error).message;
-
-      // Handle specific error cases
-      if (errorMessage.includes('not registered')) {
-        alert('You are not registered for this auction. Please join the auction first.');
-      } else if (errorMessage.includes('select a team')) {
-        alert('You need to select a team before placing bids.');
-      } else {
-        alert('Failed to place bid: ' + errorMessage);
-      }
+      console.error('Error placing bid:', error);
+      alert('Failed to place bid: ' + (error as Error).message);
     }
   };
 
@@ -412,159 +284,58 @@ export default function LiveAuctionClient() {
       return;
     }
 
-    // Check if user has joined the auction
-    if (!myParticipant) {
-      alert('You need to join the auction first before placing bids');
-      return;
-    }
-
-    if (!myParticipant.team_id) {
-      alert('You need to select a team before placing bids. Please refresh the page and try again.');
-      return;
-    }
-
-    if (!auctionState?.current_player) {
-      alert('No player is currently being auctioned');
-      return;
-    }
-
-    // Check player limit before bidding
-    if (myPlayers.length >= room.players_per_team) {
-      alert(`You cannot bid anymore! You have reached the maximum limit of ${room.players_per_team} players per team.`);
-      return;
-    }
-
-    // Validate bid amount limits
-    const currentBid = auctionState.current_bid || 0;
-    const basePrice = auctionState.current_player?.base_price || 50;
-    const minimumBid = currentBid === 0 ? basePrice : currentBid + 25;
-    const maximumBid = currentBid === 0 ? basePrice + 150 : currentBid + 150; // Max 1.5cr above current bid
-
-    if (amount < minimumBid) {
-      alert(`Bid must be at least ₹${minimumBid}L`);
-      return;
-    }
-
-    if (amount > maximumBid) {
-      alert(`Bid cannot exceed ₹${maximumBid}L (maximum 1.5cr above current bid)`);
+    if (!auctionState?.current_player || !myParticipant) {
+      alert('Cannot place bid at this time');
       return;
     }
 
     try {
-      await placeBid(amount);
+      await biddingActions.placeBid(amount);
       setCustomBidAmount('');
       setShowCustomBid(false);
     } catch (error) {
-      const errorMessage = (error as Error).message;
-
-      // Handle specific error cases
-      if (errorMessage.includes('not registered')) {
-        alert('You are not registered for this auction. Please join the auction first.');
-      } else if (errorMessage.includes('select a team')) {
-        alert('You need to select a team before placing bids.');
-      } else {
-        alert('Failed to place bid: ' + errorMessage);
-      }
+      console.error('Error placing bid:', error);
+      alert('Failed to place bid: ' + (error as Error).message);
     }
   };
 
   // Auctioneer functions
   const startAuction = async () => {
-    if (!room || !isAuctioneer) {
+    if (!isAuctioneer) {
       alert('Only the auctioneer can start the auction');
       return;
     }
 
     try {
-      // Get players from database
-      const { data: players } = await supabase
-        .from('players')
-        .select('*')
-        .limit(50);
-
-      if (!players || players.length === 0) {
-        alert('No players found in database');
-        return;
-      }
-
-      // Shuffle players
-      const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
-      const firstPlayer = shuffledPlayers[0];
-
-      // Update auction state
-      const { error } = await supabase
-        .from('auction_state')
-        .upsert({
-          room_id: room.id,
-          is_active: true,
-          is_paused: false,
-          current_player: firstPlayer,
-          current_player_index: 0,
-          current_bid: 0,
-          base_price: firstPlayer.base_price,
-          leading_team: null,
-          time_remaining: room.timer_seconds || 30,
-          player_queue: shuffledPlayers,
-          sold_players: [],
-          unsold_players: []
-        }, { onConflict: 'room_id' });
-
-      if (error) throw error;
-
-      // Update room status
-      await supabase
-        .from('auction_rooms')
-        .update({ status: 'active' })
-        .eq('id', room.id);
-
-      // Start the synchronized timer
-      await startTimer(room.timer_seconds || 30);
-
+      await auctionControls.startAuction();
     } catch (error) {
+      console.error('Error starting auction:', error);
       alert('Failed to start auction: ' + (error as Error).message);
     }
   };
 
   const pauseAuction = async () => {
-    if (!room || !isAuctioneer) return;
+    if (!isAuctioneer) return;
 
     try {
-      // Update auction state
-      const { error } = await supabase
-        .from('auction_state')
-        .update({ is_paused: true })
-        .eq('room_id', room.id);
-
-      if (error) throw error;
-
-      // Also stop the synchronized timer
-      await stopTimer();
+      await auctionControls.pauseAuction();
     } catch (error) {
-      // Handle error silently
+      console.error('Error pausing auction:', error);
     }
   };
 
   const resumeAuction = async () => {
-    if (!room || !isAuctioneer) return;
+    if (!isAuctioneer) return;
 
     try {
-      // Update auction state
-      const { error } = await supabase
-        .from('auction_state')
-        .update({ is_paused: false })
-        .eq('room_id', room.id);
-
-      if (error) throw error;
-
-      // Also start the synchronized timer with current time remaining
-      await startTimer(timeRemaining);
+      await auctionControls.resumeAuction();
     } catch (error) {
-      // Handle error silently
+      console.error('Error resuming auction:', error);
     }
   };
 
   const sellPlayer = async () => {
-    if (!room || !isAuctioneer || !auctionState?.current_player) {
+    if (!isAuctioneer || !auctionState?.current_player) {
       alert('Only the auctioneer can sell players');
       return;
     }
@@ -582,101 +353,47 @@ export default function LiveAuctionClient() {
         return;
       }
 
-      // Record the sale
-      const { error: playerError } = await supabase
-        .from('auction_players')
-        .insert({
-          auction_room_id: room.id,
-          player_id: auctionState.current_player.id,
-          team_id: auctionState.leading_team,
-          participant_id: leadingParticipant.id,
-          final_price: auctionState.current_bid
-        });
-
-      if (playerError) throw playerError;
-
       // Update participant budget
       const { error: budgetError } = await supabase
         .from('auction_participants')
         .update({
-          budget_remaining: leadingParticipant.budget_remaining - auctionState.current_bid,
-          players_count: leadingParticipant.players_count + 1
+          budget_remaining: leadingParticipant.budget_remaining - auctionState.current_bid
         })
         .eq('id', leadingParticipant.id);
 
-      if (budgetError) throw budgetError;
+      if (budgetError) {
+        console.error('Error updating participant budget:', budgetError);
+        alert('Warning: Could not update participant budget');
+      }
 
       alert(`Player sold to ${leadingParticipant.team_short_name} for ${formatCurrency(auctionState.current_bid)}!`);
 
       // Move to next player
-      moveToNextPlayer();
-
+      await handleNextPlayer();
     } catch (error) {
+      console.error('Error selling player:', error);
       alert('Failed to sell player: ' + (error as Error).message);
     }
   };
 
   const moveToNextPlayer = async () => {
-    if (!room || !isAuctioneer) return;
+    if (!isAuctioneer) return;
 
     try {
-      // Get current state
-      const { data: currentState } = await supabase
-        .from('auction_state')
-        .select('*')
-        .eq('room_id', room.id)
-        .single();
-
-      if (!currentState || !currentState.player_queue) return;
-
-      const nextIndex = (currentState.current_player_index || 0) + 1;
-
-      if (nextIndex >= currentState.player_queue.length) {
-        // End auction
-        await supabase
-          .from('auction_state')
-          .update({
-            is_active: false,
-            is_paused: false
-          })
-          .eq('room_id', room.id);
-
-        alert('Auction completed!');
-        return;
-      }
-
-      const nextPlayer = currentState.player_queue[nextIndex];
-
-      // Update to next player
-      const { error } = await supabase
-        .from('auction_state')
-        .update({
-          current_player: nextPlayer,
-          current_player_index: nextIndex,
-          current_bid: 0,
-          base_price: nextPlayer.base_price,
-          leading_team: null,
-          time_remaining: room.timer_seconds || 30
-        })
-        .eq('room_id', room.id);
-
-      if (error) throw error;
-
-      // Reset timer to 30 seconds for new player
-      await resetTimer(room.timer_seconds || 30);
-
+      await auctionControls.nextPlayer();
     } catch (error) {
+      console.error('Error moving to next player:', error);
       alert('Failed to move to next player: ' + (error as Error).message);
     }
   };
 
   const endAuction = async () => {
-    if (!room || !isAuctioneer) {
+    if (!isAuctioneer || !room) {
       alert('Only the auctioneer can end the auction');
       return;
     }
 
-    if (!confirm(`Are you sure you want to end and delete the auction "${room.name}"? This action cannot be undone and will remove all participants from the room.`)) {
+    if (!confirm(`Are you sure you want to end the auction "${room.name}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -703,32 +420,32 @@ export default function LiveAuctionClient() {
         .eq('room_id', room.id);
 
       alert('Auction ended successfully! Redirecting to dashboard...');
-
-      // Redirect to dashboard
       router.push('/dashboard');
-
     } catch (error) {
       alert('Failed to end auction: ' + (error as Error).message);
     }
   };
 
-  // Debugging: Log auction state and participant info
-  useEffect(() => {
-    if (room && user) {
-      console.log('Auction Room:', room);
-      console.log('User:', user);
-      console.log('My Participant:', myParticipant);
-      console.log('Auction State:', auctionState);
-    }
-  }, [room, user, myParticipant, auctionState]);
+  const addTime = async (seconds: number) => {
+    if (!isAuctioneer) return;
 
-  // Format currency helper
-  const formatCurrency = (amount: number) => {
-    if (!amount || amount === 0) return '0L';
-    if (amount >= 100) {
-      return `${(amount / 100).toFixed(1)}Cr`;
+    try {
+      await auctionControls.addTime(seconds);
+    } catch (error) {
+      console.error('Error adding time:', error);
     }
-    return `${amount}L`;
+  };
+
+  // Format currency helper - Fixed for lakh-based system
+  const formatCurrency = (amount: number) => {
+    if (!amount || amount === 0) return '₹0L';
+
+    if (amount >= 100) { // 100L = 1 Crore
+      const crores = amount / 100;
+      return crores % 1 === 0 ? `₹${crores}Cr` : `₹${crores.toFixed(1)}Cr`;
+    } else {
+      return amount % 1 === 0 ? `₹${amount}L` : `₹${amount.toFixed(1)}L`;
+    }
   };
 
   const signOut = async () => {
@@ -740,7 +457,46 @@ export default function LiveAuctionClient() {
     }
   };
 
-  if (loading) {
+  // Handle non-participant users
+  if (!loading && !auctionLoading && room && user && !myParticipant && !isAuctioneer) {
+    return (
+      <div>
+        <nav className="nav">
+          <div className="container">
+            <div className="nav-content">
+              <a href="/dashboard" className="nav-brand">
+                <Trophy className="w-6 h-6" />
+                <span>CrickRush</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+
+        <main className="container section">
+          <div className="text-center">
+            <div className="feature-icon mb-6" style={{ background: 'linear-gradient(135deg, var(--accent-red) 0%, #ef4444 100%)', width: '5rem', height: '5rem', margin: '0 auto' }}>
+              <Users className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold mb-4">Access Denied</h1>
+            <p className="text-xl mb-8" style={{ color: 'var(--text-muted)' }}>
+              You are not a participant in this auction room.
+            </p>
+            <p className="mb-8" style={{ color: 'var(--text-muted)' }}>
+              Please join the auction first using the join link provided by the auctioneer.
+            </p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="btn btn-primary btn-lg"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (loading || auctionLoading) {
     return (
       <div className="loading">
         <div className="spinner"></div>
@@ -985,74 +741,6 @@ export default function LiveAuctionClient() {
         />
       )}
 
-      {/* Show franchise selection for users who haven't joined */}
-      {!myParticipant && !isAuctioneer && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-        }}>
-          <div className="card card-lg" style={{ maxWidth: '64rem', width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
-            <div className="text-center mb-6">
-              <div className="feature-icon mb-4" style={{ background: 'linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-cyan) 100%)', width: '4rem', height: '4rem', margin: '0 auto' }}>
-                <Users className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2">Join {room.name}</h2>
-              <p style={{ color: 'var(--text-muted)' }}>
-                Select an IPL franchise to join this auction
-              </p>
-            </div>
-
-            <div className="grid grid-5 gap-4 mb-6">
-              {availableTeams.map((team) => (
-                <button
-                  key={team.id}
-                  onClick={() => setSelectedTeam(team.id)}
-                  disabled={!team.available}
-                  className={`card-sm text-center p-4 transition-all ${
-                    selectedTeam === team.id ? 'ring-2 ring-blue-500' : ''
-                  } ${!team.available ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
-                  style={{
-                    backgroundColor: team.available ? 'var(--card-bg)' : 'var(--background-muted)',
-                    borderColor: selectedTeam === team.id ? team.color : 'var(--border-default)'
-                  }}
-                >
-                  <div className="mb-3 flex justify-center">
-                    <FranchiseLogo franchiseCode={team.short_name} size="xl" />
-                  </div>
-                  <div className="font-bold text-sm">{team.short_name}</div>
-                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    {team.city}
-                  </div>
-                  {!team.available && (
-                    <div className="text-xs text-red-400 mt-1">Taken</div>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="btn btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={joinWithTeam}
-                disabled={!selectedTeam}
-                className="btn btn-primary flex-1"
-              >
-                Join Auction
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Content */}
       <main className="container section">
@@ -1190,7 +878,7 @@ export default function LiveAuctionClient() {
                   </div>
 
                   {/* Bidding Controls */}
-                  {myParticipant && auctionState.is_active && !auctionState.is_paused && timeRemaining > 0 && timerRunning && (
+                  {myParticipant && auctionState.is_active && !auctionState.is_paused && timeRemaining > 0 && isRunning && (
                     <div className="space-y-4">
                       <div className="flex gap-4">
                         <button
@@ -1236,7 +924,7 @@ export default function LiveAuctionClient() {
                   )}
 
                   {/* Show message when bidding is not available */}
-                  {myParticipant && auctionState.is_active && (timeRemaining <= 0 || !timerRunning || auctionState.is_paused) && (
+                  {myParticipant && auctionState.is_active && (timeRemaining <= 0 || !isRunning || auctionState.is_paused) && (
                     <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-4">
                       <div className="text-center">
                         <h3 className="text-lg font-bold mb-2">Bidding Not Available</h3>
@@ -1348,119 +1036,156 @@ export default function LiveAuctionClient() {
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* My Team Info */}
-            {myParticipant && (
-              <div className="card">
-                <h3 className="text-lg font-bold mb-4">My Team</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <FranchiseLogo franchiseCode={myParticipant.team_short_name || ''} size="md" />
-                    <div>
-                      <div className="font-bold">{myParticipant.team_short_name}</div>
-                      <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                        Budget: {formatCurrency(myParticipant.budget_remaining)}
+          {/* Player Queue - ONLY FOR AUCTIONEER */}
+          {isAuctioneer && auctionState?.player_queue && auctionState.player_queue.length > 0 && (
+            <div className="card">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Crown className="w-5 h-5 text-yellow-400" />
+                Player Queue - Auctioneer Only ({(auctionState.current_player_index || 0) + 1}/{auctionState.player_queue.length})
+              </h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {/* Show a window of players around the current player */}
+                {(() => {
+                  const currentIndex = auctionState.current_player_index || 0;
+                  const startIndex = Math.max(0, currentIndex - 2); // Show 2 before current
+                  const endIndex = Math.min(auctionState.player_queue.length, currentIndex + 8); // Show 7 after current
+                  const visiblePlayers = auctionState.player_queue.slice(startIndex, endIndex);
+
+                  return visiblePlayers.map((player, relativeIndex) => {
+                    const actualIndex = startIndex + relativeIndex;
+                    const isCurrent = actualIndex === currentIndex;
+                    const isNext = actualIndex === currentIndex + 1;
+                    const isPast = actualIndex < currentIndex;
+
+                    return (
+                      <div
+                        key={player.id}
+                        className={`p-3 rounded-lg border ${
+                          isCurrent 
+                            ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30' 
+                            : isNext
+                            ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20'
+                            : isPast
+                            ? 'bg-gray-500/10 border-gray-500/20 opacity-50'
+                            : 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/20'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm flex items-center gap-2">
+                              <span className="text-xs text-gray-400">#{actualIndex + 1}</span>
+                              {player.name}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              {player.role} • {player.country}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xs font-bold">
+                              {formatCurrency(player.base_price)}
+                            </div>
+                            {isCurrent && (
+                              <div className="text-xs text-green-400 font-bold">CURRENT</div>
+                            )}
+                            {isNext && (
+                              <div className="text-xs text-blue-400 font-bold">NEXT</div>
+                            )}
+                            {isPast && (
+                              <div className="text-xs text-gray-400">DONE</div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-1 gap-4">
-                    <div className="text-center p-3 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-lg">
-                      <div className="text-lg font-bold">{myPlayers.length}</div>
-                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>In Squad</div>
+                    );
+                  });
+                })()}
+
+                {/* Show progress summary */}
+                <div className="text-center p-3 border-t">
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    <div className="grid grid-3 gap-2 text-center">
+                      <div>
+                        <div className="text-gray-400 font-bold">{auctionState.current_player_index || 0}</div>
+                        <div>Completed</div>
+                      </div>
+                      <div>
+                        <div className="text-green-400 font-bold">1</div>
+                        <div>Current</div>
+                      </div>
+                      <div>
+                        <div className="text-blue-400 font-bold">
+                          {auctionState.player_queue.length - (auctionState.current_player_index || 0) - 1}
+                        </div>
+                        <div>Remaining</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* My Squad */}
-            {myParticipant && (
-              <div className="card">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Trophy className="w-5 h-5" />
-                  My Squad ({myPlayers.length})
-                </h3>
-                {myPlayers.length > 0 ? (
-                  <div className="space-y-3">
-                    {myPlayers.map((player) => (
-                      <div key={player.id} className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-sm">{player.player.name}</div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                              {player.player.role} • {player.player.country}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-bold text-green-400">
-                              {formatCurrency(player.final_price)}
-                            </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                              Base: {formatCurrency(player.player.base_price)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="mt-4 p-3 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Total Spent:</span>
-                        <span className="font-bold text-green-400">
-                          {formatCurrency(myPlayers.reduce((total, p) => total + p.final_price, 0))}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Remaining Balance:</span>
-                        <span className="font-bold text-blue-400">
-                          {formatCurrency(room.budget_per_team - myPlayers.reduce((total, p) => total + p.final_price, 0))}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      No players purchased yet
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Participants */}
+          {/* My Squad - FOR PARTICIPANTS */}
+          {!isAuctioneer && myParticipant && (
             <div className="card">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Teams ({participants.length}/{room.max_participants})
+                <FranchiseLogo franchiseCode={myParticipant.team_short_name || ''} size="sm" />
+                My Squad ({myPlayers.length} players)
               </h3>
-              <div className="space-y-3">
-                {participants.map((participant) => (
-                  <div key={participant.id} className="card-sm">
-                    <div className="flex items-center gap-3">
-                      <FranchiseLogo franchiseCode={participant.team_short_name || ''} size="md" />
-                      <div className="flex-1">
-                        <div className="font-medium flex items-center gap-2">
-                          {participant.team_short_name}
-                          {participant.is_auctioneer && (
-                            <Crown className="w-4 h-4" style={{ color: 'var(--accent-yellow)' }} />
-                          )}
+              {myPlayers.length > 0 ? (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {myPlayers.map((playerData) => (
+                    <div key={playerData.id} className="card-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{playerData.player.name}</div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {playerData.player.role} • {playerData.player.country}
+                          </div>
                         </div>
-                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                          {formatCurrency(participant.budget_remaining)} left
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-green-400">
+                            {formatCurrency(playerData.final_price)}
+                          </div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            Base: {formatCurrency(playerData.player.base_price)}
+                          </div>
                         </div>
                       </div>
-                      {participant.user_id === user?.id && (
-                        <div className="text-sm font-medium" style={{ color: 'var(--accent-green)' }}>You</div>
-                      )}
+                    </div>
+                  ))}
+                  <div className="pt-2 border-t">
+                    <div className="text-center text-sm">
+                      <div className="font-bold">Total Spent: <span className="text-red-400">{formatCurrency(myPlayers.reduce((sum, p) => sum + p.final_price, 0))}</span></div>
+                      <div style={{ color: 'var(--text-muted)' }}>
+                        Budget Remaining: <span className="text-green-400">{formatCurrency(myParticipant.budget_remaining)}</span>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">🏏</div>
+                  <p style={{ color: 'var(--text-muted)' }}>No players purchased yet</p>
+                </div>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* Bidding History */}
+          {auctionState?.current_player && (
+            <div className="card">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Timer className="w-5 h-5" />
+                Bidding History - {auctionState.current_player.name}
+              </h3>
+              <BiddingHistory
+                roomId={room.id}
+                playerId={auctionState.current_player.id}
+                participants={participants}
+              />
+            </div>
+          )}
         </div>
       </main>
     </div>

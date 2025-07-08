@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import FranchiseLogo from '@/components/FranchiseLogo';
-import { Users, Trophy, CheckCircle, Target, UserPlus, Crown, Play, Settings, LogOut, User, ChevronDown } from 'lucide-react';
+import { Users, Trophy, CheckCircle, Target, UserPlus, LogOut, User, ChevronDown } from 'lucide-react';
 
 interface IPLTeam {
   id: string;
@@ -28,12 +28,25 @@ interface AuctionRoom {
   players_per_team: number;
 }
 
+interface User {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+}
+
+interface Participant {
+  team_id: string;
+}
+
 export default function JoinAuctionClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const roomKey = searchParams.get('roomKey') || '';
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<string>('');
@@ -41,10 +54,6 @@ export default function JoinAuctionClient() {
   const [availableTeams, setAvailableTeams] = useState<IPLTeam[]>([]);
   const [error, setError] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-
-  useEffect(() => {
-    initializePage();
-  }, []);
 
   const initializePage = async () => {
     try {
@@ -81,16 +90,16 @@ export default function JoinAuctionClient() {
       }
 
       setRoom(roomData);
+      console.log('Loaded room data:', roomData);
 
       // Check if user is already a participant
-      const { data: existingParticipant } = await supabase
+      const { data: existingParticipants } = await supabase
         .from('auction_participants')
         .select('*')
         .eq('auction_room_id', roomData.id)
-        .eq('user_id', session.user.id)
-        .single();
+        .eq('user_id', session.user.id);
 
-      if (existingParticipant) {
+      if (existingParticipants && existingParticipants.length > 0) {
         // User already joined - redirect to auction room
         router.push(`/auction/${roomData.room_key}`);
         return;
@@ -105,7 +114,7 @@ export default function JoinAuctionClient() {
       // Load available teams
       await loadAvailableTeams(roomData);
 
-    } catch (error) {
+    } catch {
       setError('Failed to load auction details');
     } finally {
       setLoading(false);
@@ -115,56 +124,92 @@ export default function JoinAuctionClient() {
   const loadAvailableTeams = async (roomData: AuctionRoom) => {
     try {
       // Get all franchises
-      const { data: franchises } = await supabase
+      const { data: franchises, error: franchiseError } = await supabase
         .from('ipl_franchises')
         .select('*')
         .order('name');
 
-      // Get taken teams
-      const { data: takenTeams } = await supabase
-        .from('auction_participants')
-        .select('team_id, users_profiles!inner(full_name)')
-        .eq('auction_room_id', roomData.id)
-        .not('team_id', 'is', null);
+      if (franchiseError) {
+        console.error('Error loading franchises:', franchiseError);
+        setError('Failed to load team information');
+        return;
+      }
 
-      const takenTeamIds = new Set(takenTeams?.map(t => t.team_id) || []);
-      const takenTeamMap = new Map(takenTeams?.map(t => [t.team_id, t.users_profiles?.full_name || 'Unknown']) || []);
+      // Get taken teams - handle potential RLS issues
+      let takenTeams: Participant[] = [];
+      try {
+        const { data: participants, error: participantsError } = await supabase
+          .from('auction_participants')
+          .select('team_id')
+          .eq('auction_room_id', roomData.id)
+          .not('team_id', 'is', null);
+
+        if (participantsError) {
+          console.warn('Could not load participants (RLS issue?):', participantsError);
+          // Continue with empty taken teams array
+        } else {
+          takenTeams = participants || [];
+        }
+      } catch (participantError) {
+        console.warn('Participant loading failed:', participantError);
+        // Continue with empty taken teams array
+      }
+
+      const takenTeamIds = new Set(takenTeams.map(t => t.team_id));
 
       const teamsWithAvailability = franchises?.map(team => ({
         ...team,
         available: !takenTeamIds.has(team.id),
-        takenBy: takenTeamMap.get(team.id)
+        takenBy: 'Unknown' // Simplified since we can't reliably get user names
       })) || [];
 
       setAvailableTeams(teamsWithAvailability);
-    } catch (error) {
+    } catch {
       setError('Failed to load team information');
     }
   };
 
   const joinAuction = async () => {
-    if (!selectedTeam || !room || !user) return;
+    if (!selectedTeam || !room || !user) {
+      console.log('Missing required data:', { selectedTeam, room: !!room, user: !!user });
+      return;
+    }
+
+    setJoining(true);
+    setError('');
 
     try {
-      setJoining(true);
+      // Simple insert without complex error handling
+      const insertData = {
+        auction_room_id: room.id,
+        user_id: user.id,
+        team_id: selectedTeam,
+        budget_remaining: room.budget_per_team,
+        is_auctioneer: false
+      };
 
-      const { error } = await supabase
+      console.log('Inserting participant:', insertData);
+
+      const result = await supabase
         .from('auction_participants')
-        .insert({
-          auction_room_id: room.id,
-          user_id: user.id,
-          team_id: selectedTeam,
-          budget_remaining: room.budget_per_team,
-          players_count: 0,
-          is_auctioneer: false
-        });
+        .insert(insertData)
+        .select()
+        .single();
 
-      if (error) throw error;
+      console.log('Insert complete:', result);
 
-      // Redirect to auction room
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to join auction');
+      }
+
+      // Success - redirect to auction room
+      console.log('Successfully joined auction, redirecting...');
       router.push(`/auction/${room.room_key}`);
+
     } catch (error) {
-      setError('Failed to join auction. Please try again.');
+      console.error('Join auction failed:', error);
+      setError(error instanceof Error ? error.message : 'Failed to join auction');
+    } finally {
       setJoining(false);
     }
   };
@@ -173,6 +218,10 @@ export default function JoinAuctionClient() {
     await supabase.auth.signOut();
     router.push('/auth');
   };
+
+  useEffect(() => {
+    initializePage();
+  }, [roomKey]);
 
   if (loading) {
     return (
@@ -192,7 +241,7 @@ export default function JoinAuctionClient() {
             <div className="nav-content">
               <a href="/dashboard" className="nav-brand">
                 <Trophy className="w-6 h-6" />
-                <span>IPL Auction</span>
+                <span>CrickRush</span>
               </a>
             </div>
           </div>
@@ -225,7 +274,7 @@ export default function JoinAuctionClient() {
           <div className="nav-content">
             <a href="/dashboard" className="nav-brand">
               <Trophy className="w-6 h-6" />
-              <span>IPL Auction</span>
+              <span>CrickRush</span>
             </a>
 
             <div className="nav-actions">
@@ -318,7 +367,7 @@ export default function JoinAuctionClient() {
                     <Target className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-lg font-bold mb-2">Budget</h3>
-                  <p className="text-2xl font-bold text-green-400 mb-1">₹{room.budget_per_team}Cr</p>
+                  <p className="text-2xl font-bold text-green-400 mb-1">₹{room.budget_per_team / 100}Cr</p>
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Starting budget per team</p>
                 </div>
 
@@ -344,59 +393,124 @@ export default function JoinAuctionClient() {
           )}
 
           <div className="card card-lg">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold mb-2">Choose Your IPL Franchise</h2>
-              <p style={{ color: 'var(--text-muted)' }}>
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-3 text-white">Choose Your IPL Franchise</h2>
+              <p className="text-lg mb-4" style={{ color: 'var(--text-muted)' }}>
                 Select an available team to represent in this auction
               </p>
+
+              {/* Available Teams Count */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/30">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="text-green-400 font-medium text-sm">
+                  {availableTeams.filter(t => t.available).length} teams available
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-5 gap-4 mb-8">
+            {/* Franchise Grid */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
               {availableTeams.map((team) => (
-                <button
+                <div
                   key={team.id}
+                  className={`franchise-team-card relative rounded-xl border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
+                    team.available 
+                      ? selectedTeam === team.id 
+                        ? 'border-blue-500 bg-blue-500/10 scale-105 shadow-lg shadow-blue-500/20' 
+                        : 'border-gray-600 bg-gray-800/50 hover:border-gray-400 hover:scale-105 hover:shadow-lg hover:shadow-gray-500/10 hover:bg-gray-800/70'
+                      : 'border-gray-700 bg-gray-800/30 opacity-60 cursor-not-allowed'
+                  }`}
                   onClick={() => team.available && setSelectedTeam(team.id)}
-                  disabled={!team.available}
-                  className={`card text-center p-4 transition-all ${
-                    selectedTeam === team.id ? 'ring-2 ring-blue-500' : ''
-                  } ${!team.available ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 cursor-pointer'}`}
-                  style={{
-                    backgroundColor: team.available ? 'var(--bg-surface)' : 'var(--bg-glass)',
-                    borderColor: selectedTeam === team.id ? team.color : 'var(--border-default)'
-                  }}
                 >
-                  <div className="mb-3 flex justify-center">
-                    <FranchiseLogo franchiseCode={team.short_name} size="xl" />
-                  </div>
-                  <div className="font-bold text-sm mb-1">{team.short_name}</div>
-                  <div className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
-                    {team.city}
-                  </div>
-                  {!team.available && (
-                    <div className="text-xs text-red-400">
-                      Taken by {team.takenBy}
-                    </div>
-                  )}
+                  {/* Hover shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full transition-transform duration-1000 hover:translate-x-full"></div>
+
+                  {/* Selection indicator */}
                   {selectedTeam === team.id && (
-                    <div className="text-xs text-blue-400 mt-1">
-                      <CheckCircle className="w-4 h-4 mx-auto" />
+                    <div className="absolute top-3 right-3 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+                      <CheckCircle className="w-3 h-3 text-white" />
                     </div>
                   )}
-                </button>
+
+                  <div className="p-4 text-center relative z-10">
+                    {/* Team Logo */}
+                    <div className="flex justify-center mb-3">
+                      <div className="transition-transform duration-300 hover:scale-110 hover:rotate-3">
+                        <FranchiseLogo franchiseCode={team.short_name} size="lg" />
+                      </div>
+                    </div>
+
+                    {/* Team Code */}
+                    <h3 className="text-xl font-bold mb-1 text-white transition-colors duration-300">
+                      {team.short_name}
+                    </h3>
+
+                    {/* Team City */}
+                    <p className="text-sm text-gray-400 mb-2 transition-colors duration-300">
+                      {team.city}
+                    </p>
+
+                    {/* Full Team Name */}
+                    <p className="text-xs text-gray-500 mb-3 transition-colors duration-300">
+                      {team.name}
+                    </p>
+
+                    {/* Availability Status */}
+                    <div className="flex items-center justify-center gap-1">
+                      <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        team.available ? 'bg-green-400 animate-pulse' : 'bg-red-400'
+                      }`}></div>
+                      <span className={`text-xs font-medium transition-colors duration-300 ${
+                        team.available ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {team.available ? 'Available' : 'Taken'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
 
+            {/* Selection Summary */}
+            {selectedTeam && (
+              <div className="mb-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
+                <div className="flex items-center justify-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <FranchiseLogo
+                      franchiseCode={availableTeams.find(t => t.id === selectedTeam)?.short_name || ''}
+                      size="md"
+                    />
+                    <div>
+                      <h4 className="font-bold text-lg text-white">
+                        {availableTeams.find(t => t.id === selectedTeam)?.short_name}
+                      </h4>
+                      <p className="text-sm text-gray-400">
+                        {availableTeams.find(t => t.id === selectedTeam)?.city}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-xl">🏏</div>
+                  <div className="text-green-400 font-semibold">
+                    Ready to join!
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="btn btn-secondary px-8"
+                className="btn btn-secondary px-8 py-3 text-lg font-medium rounded-lg"
               >
                 Cancel
               </button>
               <button
                 onClick={joinAuction}
                 disabled={!selectedTeam || joining}
-                className="btn btn-primary px-8"
+                className={`btn btn-primary px-8 py-3 text-lg font-medium rounded-lg ${
+                  !selectedTeam ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
                 {joining ? (
                   <>
@@ -405,7 +519,7 @@ export default function JoinAuctionClient() {
                   </>
                 ) : (
                   <>
-                    <UserPlus className="w-4 h-4 mr-2" />
+                    <UserPlus className="w-5 h-5 mr-2" />
                     Join Auction
                   </>
                 )}

@@ -144,15 +144,11 @@ export function useLiveBidding(roomId: string, userId: string | null) {
 
     setLoading(true);
     try {
-      console.log('🔍 Debug: Attempting to place bid with:', { roomId, userId, amount });
-
       // First, let's try a simpler query to see if we can access the table at all
       const { data: allParticipants, error: listError } = await supabase
         .from('auction_participants')
         .select('*')
         .eq('auction_room_id', roomId);
-
-      console.log('🔍 Debug: All participants in room:', { allParticipants, listError });
 
       // Now try the specific query without user_name column
       const { data: participant, error: participantError } = await supabase
@@ -162,23 +158,18 @@ export function useLiveBidding(roomId: string, userId: string | null) {
         .eq('auction_room_id', roomId)
         .maybeSingle(); // Use maybeSingle instead of single to avoid throwing on no results
 
-      console.log('🔍 Debug: Participant query result:', { participant, participantError });
-
       if (participantError) {
         console.error('Error fetching participant:', participantError);
         throw new Error(`Database error: ${participantError.message || 'Unknown error'}`);
       }
 
       if (!participant) {
-        console.log('🔍 Debug: No participant found for userId:', userId, 'in room:', roomId);
         throw new Error('You are not registered for this auction. Please join the auction first.');
       }
 
       if (!participant.team_id) {
         throw new Error('You need to select a team before placing bids. Please refresh the page and try again.');
       }
-
-      console.log('✅ Debug: Participant found:', participant);
 
       // Get current auction state to validate bid
       const { data: auctionStateData, error: stateError } = await supabase
@@ -209,14 +200,6 @@ export function useLiveBidding(roomId: string, userId: string | null) {
         throw new Error(`Bid must be at least ₹${minimumBid}L`);
       }
 
-      console.log('🔍 Debug: Placing bid with data:', {
-        room_id: roomId,
-        user_id: userId,
-        team_id: participant.team_id,
-        player_id: auctionStateData.current_player.id,
-        amount: amount
-      });
-
       // Insert bid into database
       const { error: bidError } = await supabase
         .from('auction_bids')
@@ -234,8 +217,6 @@ export function useLiveBidding(roomId: string, userId: string | null) {
         throw new Error('Failed to place bid. Please try again.');
       }
 
-      console.log('🔍 Debug: Bid inserted successfully, now updating auction state...');
-
       // Update local auction state immediately since the bid was successful
       setAuctionState(prev => ({
         ...prev,
@@ -245,8 +226,6 @@ export function useLiveBidding(roomId: string, userId: string | null) {
         time_remaining: Math.min(prev.time_remaining + 5, 60) // Add 5 seconds, max 60 seconds
       }));
 
-      console.log('✅ Local auction state updated immediately');
-
       // Try to update database auction state (but don't fail if this doesn't work)
       try {
         const { data: existingState, error: checkError } = await supabase
@@ -254,8 +233,6 @@ export function useLiveBidding(roomId: string, userId: string | null) {
           .select('*')
           .eq('room_id', roomId)
           .maybeSingle();
-
-        console.log('🔍 Debug: Existing auction state check:', { existingState, checkError, roomId });
 
         const newTimeRemaining = Math.min((existingState?.time_remaining || 0) + 5, 60);
 
@@ -266,10 +243,7 @@ export function useLiveBidding(roomId: string, userId: string | null) {
           time_remaining: newTimeRemaining
         };
 
-        console.log('🔍 Debug: Auction state update data:', updateData);
-
         if (existingState) {
-          console.log('🔍 Debug: Updating existing auction state...');
           const result = await supabase
             .from('auction_state')
             .update(updateData)
@@ -277,8 +251,6 @@ export function useLiveBidding(roomId: string, userId: string | null) {
 
           if (result.error) {
             console.log('⚠️ Database auction state update failed, but local state is updated:', result.error);
-          } else {
-            console.log('✅ Database auction state updated successfully');
           }
         } else {
           console.log('🔍 Debug: No existing auction state found - skipping database update');
@@ -287,11 +259,8 @@ export function useLiveBidding(roomId: string, userId: string | null) {
         console.log('⚠️ Database auction state update failed, but local state is updated:', dbError);
       }
 
-      console.log('✅ Bid placed successfully:', amount);
-
     } catch (error) {
-      console.error('Error placing bid:', error);
-      throw error;
+      throw error; // Re-throw to be handled by caller
     } finally {
       setLoading(false);
     }
@@ -302,8 +271,6 @@ export function useLiveBidding(roomId: string, userId: string | null) {
    */
   useEffect(() => {
     if (!roomId) return;
-
-    console.log('🔍 Setting up real-time subscriptions for room:', roomId);
 
     // Load initial data
     loadAuctionState();
@@ -318,7 +285,6 @@ export function useLiveBidding(roomId: string, userId: string | null) {
         table: 'auction_state',
         filter: `room_id=eq.${roomId}`
       }, (payload) => {
-        console.log('🔴 Real-time auction state update received:', payload);
         if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
           const newState = payload.new;
 
@@ -329,18 +295,9 @@ export function useLiveBidding(roomId: string, userId: string | null) {
             // Check if this is a player change (different player ID)
             const isPlayerChange = prev.current_player?.id !== newState.current_player?.id;
 
-            console.log('🔄 Auction state update:', {
-              isPlayerChange,
-              incomingBid,
-              currentBid,
-              newPlayer: newState.current_player?.name,
-              prevPlayer: prev.current_player?.name
-            });
-
             // If player changed, always use the new state (reset bids)
             // Otherwise, only update current_bid if incoming bid is higher
             if (isPlayerChange) {
-              console.log('🔄 Player changed - resetting to new state');
               return {
                 is_active: newState.is_active,
                 is_paused: newState.is_paused,
@@ -380,8 +337,6 @@ export function useLiveBidding(roomId: string, userId: string | null) {
         table: 'auction_bids',
         filter: `room_id=eq.${roomId}`
       }, (payload) => {
-        console.log('🔴 Real-time bid update received:', payload);
-
         // Immediately reload bids when new bid is inserted
         loadBids();
 
@@ -410,7 +365,6 @@ export function useLiveBidding(roomId: string, userId: string | null) {
 
     // Cleanup function
     return () => {
-      console.log('🔍 Cleaning up real-time subscriptions for room:', roomId);
       stateSubscription.unsubscribe();
       bidSubscription.unsubscribe();
     };

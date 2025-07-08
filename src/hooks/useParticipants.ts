@@ -77,7 +77,6 @@ export function useParticipants(roomId: string, userId: string | null) {
       setParticipants(enrichedParticipants);
     } catch (err) {
       console.error('Error loading participants:', err);
-      setError('Failed to load participants');
     } finally {
       setLoading(false);
     }
@@ -90,23 +89,26 @@ export function useParticipants(roomId: string, userId: string | null) {
     // Load initial data
     loadParticipants();
 
-    // Subscribe to real-time changes
-    const subscription = supabase
-      .channel(`participants_${roomId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'auction_participants',
-        filter: `auction_room_id=eq.${roomId}`
-      }, (payload) => {
-        console.log('Participants change:', payload);
-        // Reload participants to get fresh data with team info
-        loadParticipants();
-      })
+    // Subscribe to participant changes
+    const channel = supabase
+      .channel(`participants-${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'auction_participants',
+          filter: `auction_room_id=eq.${roomId}`
+        },
+        (payload) => {
+          // Refresh participants when changes occur
+          loadParticipants();
+        }
+      )
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [roomId, loadParticipants]);
 

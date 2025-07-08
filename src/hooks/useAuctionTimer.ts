@@ -1,291 +1,257 @@
 /**
- * @fileoverview Synchronized auction timer hook for CrickRush
- * Manages real-time synchronized countdown timer across all auction participants
- * Automatically adds time when bids are placed and handles pause/resume functionality
+ * @fileoverview Enhanced Real-time Auction Timer Hook for CrickRush
+ * Manages synchronized timer state across all users in real-time
  */
 
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
-/**
- * Interface representing the timer state in the database
- */
 interface TimerState {
-  /** Remaining time in seconds */
   time_remaining: number;
-  /** Whether the timer is currently running */
   is_running: boolean;
-  /** Timestamp of last timer update */
   last_updated: string;
-  /** Server timestamp for synchronization */
-  server_time: string;
+  room_id: string;
 }
 
-/**
- * Custom hook for managing synchronized auction timer
- *
- * @param roomId - The auction room ID to sync timer with
- * @param isAuctioneer - Whether the current user is the auctioneer (can control timer)
- * @returns Object containing timer state and control functions
- *
- * @example
- * ```typescript
- * const {
- *   timeRemaining,
- *   isRunning,
- *   loading,
- *   hasExpired,
- *   startTimer,
- *   stopTimer,
- *   resetTimer,
- *   addTime
- * } = useAuctionTimer(roomId, isAuctioneer);
- * ```
- */
 export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
-  // Timer state
   const [timeRemaining, setTimeRemaining] = useState<number>(30);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [hasExpired, setHasExpired] = useState<boolean>(false);
 
-  // Refs for managing intervals and synchronization
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSyncRef = useRef<number>(0);
-  const serverTimeOffsetRef = useRef<number>(0);
+  const lastSyncRef = useRef<number>(Date.now());
 
   /**
-   * Calculates the time offset between client and server
-   * Used for accurate timer synchronization across all users
-   */
-  const calculateServerTimeOffset = useCallback(async () => {
-    try {
-      const clientTime = Date.now();
-
-      // Try to get server time, but provide fallback if function doesn't exist
-      const { data, error } = await supabase.rpc('get_server_time');
-
-      if (error) {
-        // Fallback: assume no offset if server function doesn't exist
-        serverTimeOffsetRef.current = 0;
-        return;
-      }
-
-      const serverTime = new Date(data).getTime();
-      serverTimeOffsetRef.current = serverTime - clientTime;
-
-    } catch (error) {
-      // Fallback: assume no offset if there's any error
-      serverTimeOffsetRef.current = 0;
-    }
-  }, []);
-
-  /**
-   * Get current synchronized time
-   * Accounts for server time offset
-   */
-  const getCurrentTime = useCallback(() => {
-    return Date.now() + serverTimeOffsetRef.current;
-  }, []);
-
-  /**
-   * Loads the current timer state from the database
-   * Initializes timer values and starts the countdown
+   * Loads initial timer state from database
    */
   const loadTimerState = useCallback(async () => {
     if (!roomId) return;
 
     try {
-      const { data: timerData, error } = await supabase
-        .from('auction_timer')
-        .select('*')
+      const { data, error } = await supabase
+        .from('auction_state')
+        .select('time_remaining, is_active, is_paused, updated_at')
         .eq('room_id', roomId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        // Fallback: use default timer values if table doesn't exist
-        setTimeRemaining(30);
-        setIsRunning(false);
-        setLoading(false);
+      if (error) {
+        console.error('Error loading timer state:', error);
         return;
       }
 
-      if (timerData) {
-        const lastUpdated = new Date(timerData.last_updated).getTime();
-        const currentTime = getCurrentTime();
+      if (data) {
+        const currentTime = Date.now();
+        const lastUpdate = new Date(data.updated_at).getTime();
+        const timePassed = Math.floor((currentTime - lastUpdate) / 1000);
 
-        // Calculate elapsed time since last update
-        const elapsedMs = currentTime - lastUpdated;
-        const elapsedSeconds = Math.floor(elapsedMs / 1000);
+        // Calculate actual time remaining considering time passed
+        const actualTimeRemaining = Math.max(0, (data.time_remaining || 0) - timePassed);
 
-        // Calculate remaining time
-        let remainingTime = timerData.time_remaining;
-
-        if (timerData.is_running && elapsedSeconds > 0) {
-          remainingTime = Math.max(0, timerData.time_remaining - elapsedSeconds);
-        }
-
-        setTimeRemaining(remainingTime);
-        setIsRunning(timerData.is_running && remainingTime > 0);
-      } else {
-        // No timer data found, use defaults
-        setTimeRemaining(30);
-        setIsRunning(false);
+        setTimeRemaining(actualTimeRemaining);
+        setIsRunning(data.is_active && !data.is_paused && actualTimeRemaining > 0);
+        setHasExpired(actualTimeRemaining <= 0);
+        lastSyncRef.current = currentTime;
       }
-    } catch (error) {
-      // Fallback: use default timer values
-      setTimeRemaining(30);
-      setIsRunning(false);
+    } catch (err) {
+      console.error('Error loading timer state:', err);
     } finally {
       setLoading(false);
     }
-  }, [roomId, getCurrentTime]);
+  }, [roomId]);
 
   /**
-   * Updates the timer state in the database
-   * Auctioneer only - syncs the current timer values to the server
-   *
-   * @param newTime - The new time remaining in seconds
-   * @param running - Whether the timer is running or paused
+   * Sets up real-time timer synchronization
    */
-  const updateTimerState = useCallback(async (newTime: number, running: boolean) => {
-    if (!roomId || !isAuctioneer) return;
+  const setupTimerSync = useCallback(() => {
+    if (!roomId || channelRef.current) return;
+
+    const channel = supabase
+      .channel(`timer_${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'auction_state',
+          filter: `room_id=eq.${roomId}`
+        },
+        (payload) => {
+          if (payload.new) {
+            const currentTime = Date.now();
+            const lastUpdate = new Date(payload.new.updated_at).getTime();
+            const timePassed = Math.floor((currentTime - lastUpdate) / 1000);
+
+            // Calculate synced time remaining
+            const syncedTimeRemaining = Math.max(0, (payload.new.time_remaining || 0) - timePassed);
+
+            setTimeRemaining(syncedTimeRemaining);
+            setIsRunning(payload.new.is_active && !payload.new.is_paused && syncedTimeRemaining > 0);
+            setHasExpired(syncedTimeRemaining <= 0);
+            lastSyncRef.current = currentTime;
+          }
+        }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+  }, [roomId]);
+
+  /**
+   * Cleanup timer and subscriptions
+   */
+  const cleanup = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+  }, []);
+
+  /**
+   * Sync timer to database (auctioneer only)
+   */
+  const syncToDatabase = useCallback(async (newTime: number) => {
+    if (!isAuctioneer || !roomId) return;
 
     try {
-      const currentTime = getCurrentTime();
-
-      const { error } = await supabase
-        .from('auction_timer')
-        .upsert({
-          room_id: roomId,
+      await supabase
+        .from('auction_state')
+        .update({
           time_remaining: newTime,
-          is_running: running,
-          last_updated: new Date(currentTime).toISOString(),
-          server_time: new Date(currentTime).toISOString()
-        }, {
-          onConflict: 'room_id'
-        });
-
-      if (error) {
-        // Continue with local timer even if database update fails
-      }
-    } catch (error) {
-      // Continue with local timer even if database update fails
+          updated_at: new Date().toISOString()
+        })
+        .eq('room_id', roomId);
+    } catch (err) {
+      console.error('Error syncing timer to database:', err);
     }
-  }, [roomId, isAuctioneer, getCurrentTime]);
+  }, [isAuctioneer, roomId]);
 
   /**
-   * Starts the auction timer
-   * Only auctioneer can start the timer
-   *
-   * @param duration - Timer duration in seconds (default: 30)
+   * Start the local timer countdown
    */
-  const startTimer = useCallback(async (duration: number = 30) => {
-    if (!isAuctioneer) {
-      return;
-    }
-
-    setTimeRemaining(duration);
-    setIsRunning(true);
-    await updateTimerState(duration, true);
-  }, [isAuctioneer, updateTimerState]);
-
-  /**
-   * Stops the auction timer
-   * Only auctioneer can stop the timer
-   */
-  const stopTimer = useCallback(async () => {
-    if (!isAuctioneer) {
-      return;
-    }
-
-    setIsRunning(false);
-    await updateTimerState(timeRemaining, false);
-  }, [isAuctioneer, timeRemaining, updateTimerState]);
-
-  /**
-   * Resets the timer to a new duration
-   * Only auctioneer can reset the timer
-   *
-   * @param duration - New timer duration in seconds
-   */
-  const resetTimer = useCallback(async (duration: number) => {
-    if (!isAuctioneer) {
-      return;
-    }
-
-    setTimeRemaining(duration);
-    setIsRunning(true);
-    await updateTimerState(duration, true);
-  }, [isAuctioneer, updateTimerState]);
-
-  /**
-   * Adds time to the current timer
-   * Typically used when a bid is placed to extend bidding time
-   *
-   * @param seconds - Number of seconds to add
-   */
-  const addTime = useCallback(async (seconds: number) => {
-    if (!isAuctioneer) {
-      return;
-    }
-
-    const newTime = Math.max(seconds, timeRemaining + seconds);
-    setTimeRemaining(newTime);
-    setIsRunning(true);
-    await updateTimerState(newTime, true);
-  }, [isAuctioneer, timeRemaining, updateTimerState]);
-
-  // Local countdown effect
-  useEffect(() => {
-    if (!isRunning || timeRemaining <= 0) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-
-      // Alert when timer runs out
-      if (timeRemaining <= 0 && isRunning && !hasExpired) {
-        setIsRunning(false);
-        setHasExpired(true);
-        if (isAuctioneer) {
-          setTimeout(() => {
-            alert('⏰ Timer has run out! Please sell the player or move to the next player.');
-          }, 100);
-          updateTimerState(0, false);
-        }
-      }
-
-      return;
-    }
-
-    // Reset expired flag when timer is running
-    if (isRunning && timeRemaining > 0) {
-      setHasExpired(false);
+  const startLocalTimer = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
 
     intervalRef.current = setInterval(() => {
-      setTimeRemaining(prev => {
-        const newTime = prev - 1;
+      setTimeRemaining(prevTime => {
+        const newTime = Math.max(0, prevTime - 1);
 
-        // If timer hits 0, stop and alert
         if (newTime <= 0) {
-          if (isAuctioneer && !hasExpired) {
-            setTimeout(() => {
-              alert('⏰ Timer has run out! Please sell the player or move to the next player.');
-            }, 100);
-            updateTimerState(0, false);
-          }
           setIsRunning(false);
           setHasExpired(true);
-          return 0;
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+        }
+
+        // Sync to database every 5 seconds or when time expires
+        const now = Date.now();
+        if (isAuctioneer && (now - lastSyncRef.current > 5000 || newTime <= 0)) {
+          syncToDatabase(newTime);
+          lastSyncRef.current = now;
         }
 
         return newTime;
       });
     }, 1000);
+  }, [isAuctioneer, syncToDatabase]);
+
+  /**
+   * Timer control actions (auctioneer only)
+   */
+  const startTimer = useCallback(async () => {
+    if (!isAuctioneer || !roomId) return;
+
+    try {
+      await supabase
+        .from('auction_state')
+        .update({
+          is_active: true,
+          is_paused: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('room_id', roomId);
+    } catch (err) {
+      console.error('Error starting timer:', err);
+    }
+  }, [isAuctioneer, roomId]);
+
+  const stopTimer = useCallback(async () => {
+    if (!isAuctioneer || !roomId) return;
+
+    try {
+      await supabase
+        .from('auction_state')
+        .update({
+          is_paused: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('room_id', roomId);
+    } catch (err) {
+      console.error('Error stopping timer:', err);
+    }
+  }, [isAuctioneer, roomId]);
+
+  const resetTimer = useCallback(async (newTime: number = 30) => {
+    if (!isAuctioneer || !roomId) return;
+
+    try {
+      await supabase
+        .from('auction_state')
+        .update({
+          time_remaining: newTime,
+          updated_at: new Date().toISOString()
+        })
+        .eq('room_id', roomId);
+    } catch (err) {
+      console.error('Error resetting timer:', err);
+    }
+  }, [isAuctioneer, roomId]);
+
+  const addTime = useCallback(async (seconds: number) => {
+    if (!isAuctioneer || !roomId) return;
+
+    try {
+      const newTime = Math.max(0, timeRemaining + seconds);
+      await supabase
+        .from('auction_state')
+        .update({
+          time_remaining: newTime,
+          updated_at: new Date().toISOString()
+        })
+        .eq('room_id', roomId);
+    } catch (err) {
+      console.error('Error adding time:', err);
+    }
+  }, [isAuctioneer, roomId, timeRemaining]);
+
+  // Initialize timer
+  useEffect(() => {
+    loadTimerState();
+    setupTimerSync();
+
+    return cleanup;
+  }, [roomId]);
+
+  // Handle timer running state
+  useEffect(() => {
+    if (isRunning && timeRemaining > 0) {
+      startLocalTimer();
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
 
     return () => {
       if (intervalRef.current) {
@@ -293,103 +259,21 @@ export function useAuctionTimer(roomId: string, isAuctioneer: boolean = false) {
         intervalRef.current = null;
       }
     };
-  }, [isRunning, timeRemaining, isAuctioneer, updateTimerState, hasExpired]);
-
-  // Sync timer state every 2 seconds to prevent drift (reduced from 5 seconds)
-  useEffect(() => {
-    if (!roomId || isAuctioneer) return; // Only non-auctioneers sync
-
-    const syncInterval = setInterval(() => {
-      const now = Date.now();
-      if (now - lastSyncRef.current > 2000) { // Sync every 2 seconds for better accuracy
-        loadTimerState();
-        lastSyncRef.current = now;
-      }
-    }, 2000);
-
-    return () => clearInterval(syncInterval);
-  }, [roomId, isAuctioneer, loadTimerState]);
-
-  // Real-time subscription for timer updates
-  useEffect(() => {
-    if (!roomId) return;
-
-    const subscription = supabase
-      .channel(`auction_timer_${roomId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'auction_timer',
-        filter: `room_id=eq.${roomId}`
-      }, (payload) => {
-        if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-          const timerData = payload.new as any;
-
-          // Update for all users (both auctioneer and participants)
-          const lastUpdated = new Date(timerData.last_updated).getTime();
-          const currentTime = getCurrentTime();
-          const elapsedMs = currentTime - lastUpdated;
-          const elapsedSeconds = Math.max(0, Math.floor(elapsedMs / 1000)); // Ensure non-negative
-
-          let remainingTime = timerData.time_remaining;
-
-          if (timerData.is_running && elapsedSeconds > 0) {
-            remainingTime = Math.max(0, timerData.time_remaining - elapsedSeconds);
-          }
-
-          setTimeRemaining(remainingTime);
-          setIsRunning(timerData.is_running && remainingTime > 0);
-
-          // Reset expired flag when timer is updated (e.g., when time is added)
-          if (remainingTime > 0) {
-            setHasExpired(false);
-          }
-        }
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [roomId, isAuctioneer, getCurrentTime]);
-
-  // Initialize timer
-  useEffect(() => {
-    if (!roomId) return;
-
-    const initialize = async () => {
-      await calculateServerTimeOffset();
-      await loadTimerState();
-    };
-
-    initialize();
-  }, [roomId, calculateServerTimeOffset, loadTimerState]);
+  }, [isRunning, timeRemaining, startLocalTimer]);
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
+    return cleanup;
+  }, [cleanup]);
 
   return {
-    /** Current time remaining in seconds */
     timeRemaining,
-    /** Whether the timer is currently running */
     isRunning,
-    /** Whether the hook is loading initial timer state */
     loading,
-    /** Whether the timer has expired (reached 0) */
     hasExpired,
-    /** Function to start the timer (auctioneer only) */
     startTimer,
-    /** Function to stop the timer (auctioneer only) */
     stopTimer,
-    /** Function to reset the timer (auctioneer only) */
     resetTimer,
-    /** Function to add time to the timer (auctioneer only) */
     addTime
   };
 }

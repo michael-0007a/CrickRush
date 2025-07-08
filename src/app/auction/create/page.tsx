@@ -143,6 +143,7 @@ export default function CreateAuctionPage() {
           room_key: roomKey,
           name: form.name.trim(),
           creator_id: user!.id,
+          created_by: user!.id,
           status: 'waiting',
           max_participants: form.maxTeams,
           budget_per_team: FIXED_BUDGET,
@@ -232,7 +233,7 @@ export default function CreateAuctionPage() {
             <div className="nav-content">
               <a href="/dashboard" className="nav-brand">
                 <Trophy className="w-6 h-6" />
-                <span>IPL Auction</span>
+                <span>CrickRush</span>
               </a>
 
               <div className="nav-actions">
@@ -389,7 +390,7 @@ export default function CreateAuctionPage() {
           <div className="nav-content">
             <a href="/dashboard" className="nav-brand">
               <Trophy className="w-6 h-6" />
-              <span>IPL Auction</span>
+              <span>CrickRush</span>
             </a>
 
             <div className="nav-actions">
