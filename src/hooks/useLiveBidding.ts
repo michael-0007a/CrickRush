@@ -200,8 +200,24 @@ export function useLiveBidding(roomId: string, userId: string | null) {
         throw new Error(`Bid must be at least ₹${minimumBid}L`);
       }
 
-      // Insert bid into database
+      // Insert bid into new bidding_history table
       const { error: bidError } = await supabase
+        .from('bidding_history')
+        .insert({
+          room_id: roomId,
+          player_id: auctionStateData.current_player.id,
+          team_id: participant.team_id,
+          bid_amount: amount,
+          bid_time: new Date().toISOString()
+        });
+
+      if (bidError) {
+        console.error('Error inserting bid:', bidError);
+        throw new Error('Failed to place bid. Please try again.');
+      }
+
+      // Also insert into auction_bids for backward compatibility (if needed)
+      const { error: legacyBidError } = await supabase
         .from('auction_bids')
         .insert({
           room_id: roomId,
@@ -212,9 +228,9 @@ export function useLiveBidding(roomId: string, userId: string | null) {
           timestamp: new Date().toISOString()
         });
 
-      if (bidError) {
-        console.error('Error inserting bid:', bidError);
-        throw new Error('Failed to place bid. Please try again.');
+      // Don't fail if legacy table insert fails
+      if (legacyBidError) {
+        console.warn('Legacy bid table insert failed:', legacyBidError);
       }
 
       // Update local auction state immediately since the bid was successful
@@ -302,7 +318,7 @@ export function useLiveBidding(roomId: string, userId: string | null) {
                 is_active: newState.is_active,
                 is_paused: newState.is_paused,
                 current_player: newState.current_player,
-                current_bid: incomingBid, // Use incoming bid (should be 0 for new player)
+                current_bid: incomingBid // Use incoming bid (should be 0 for new player)
                 leading_team: newState.leading_team,
                 leading_bidder: newState.leading_bidder,
                 time_remaining: newState.time_remaining || 30

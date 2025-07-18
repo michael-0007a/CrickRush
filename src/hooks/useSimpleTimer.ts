@@ -19,6 +19,7 @@ export function useSimpleTimer(
   const [timeRemaining, setTimeRemaining] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const onTimeUpdateRef = useRef(onTimeUpdate);
   const onTimeoutRef = useRef(onTimeout);
   const lastSyncRef = useRef(Date.now());
@@ -77,34 +78,41 @@ export function useSimpleTimer(
     const shouldRun = isActive && !isPaused && timeRemaining > 0;
     setIsRunning(shouldRun);
 
+    // Clear existing intervals
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (syncIntervalRef.current) {
+      clearInterval(syncIntervalRef.current);
+      syncIntervalRef.current = null;
+    }
+
     if (shouldRun) {
       console.log('▶️ Starting timer countdown');
 
+      // Main timer countdown
       intervalRef.current = setInterval(() => {
         setTimeRemaining(prev => {
           const newTime = Math.max(0, prev - 1);
 
-          // Update database every 5 seconds or when timer reaches 0
-          const shouldUpdateDB = (newTime % 5 === 0 && newTime > 0) || newTime === 0;
-
-          if (shouldUpdateDB) {
-            supabase
-              .from('auction_state')
-              .update({ time_remaining: newTime })
-              .eq('room_id', roomId)
-              .then(({ error }) => {
-                if (error) {
-                  console.warn('Failed to update timer in database:', error);
-                }
-              });
-          }
-
-          // Call time update callback
+          // Notify parent component of time update
           if (onTimeUpdateRef.current) {
             onTimeUpdateRef.current(newTime);
           }
 
-          // Call timeout callback when reaching 0
+          // Update database every second for real-time sync
+          supabase
+            .from('auction_state')
+            .update({ time_remaining: newTime })
+            .eq('room_id', roomId)
+            .then(({ error }) => {
+              if (error) {
+                console.warn('Failed to update timer in database:', error);
+              }
+            });
+
+          // Handle timeout
           if (newTime === 0 && onTimeoutRef.current) {
             console.log('⏰ Timer reached 0 - triggering timeout');
             onTimeoutRef.current();
@@ -113,45 +121,38 @@ export function useSimpleTimer(
           return newTime;
         });
       }, 1000);
+
+      // Sync with database every 3 seconds to prevent drift
+      syncIntervalRef.current = setInterval(syncWithDatabase, 3000);
     } else {
-      if (intervalRef.current) {
-        console.log('⏸️ Stopping timer countdown');
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      console.log('⏸️ Timer paused or stopped');
     }
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      }
+      if (syncIntervalRef.current) {
+        clearInterval(syncIntervalRef.current);
       }
     };
-  }, [isActive, isPaused, timeRemaining, roomId]);
+  }, [isActive, isPaused, timeRemaining, roomId, syncWithDatabase]);
 
-  // Periodic sync with database (every 10 seconds)
+  // Cleanup on unmount
   useEffect(() => {
-    if (!roomId) return;
-
-    const syncInterval = setInterval(() => {
-      // Only sync if we haven't synced recently and timer is running
-      const timeSinceLastSync = Date.now() - lastSyncRef.current;
-      if (timeSinceLastSync > 10000 && isRunning) {
-        syncWithDatabase();
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
-    }, 10000);
-
-    return () => clearInterval(syncInterval);
-  }, [roomId, isRunning, syncWithDatabase]);
-
-  // Force sync method
-  const forceSync = useCallback(() => {
-    syncWithDatabase();
-  }, [syncWithDatabase]);
+      if (syncIntervalRef.current) {
+        clearInterval(syncIntervalRef.current);
+      }
+    };
+  }, []);
 
   return {
     timeRemaining,
     isRunning,
-    forceSync
+    syncWithDatabase
   };
 }

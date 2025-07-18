@@ -215,33 +215,55 @@ export default function ProfilePage() {
   };
 
   /**
-   * Handles profile form submission
+   * Handles profile form submission with enhanced error handling and logging
    * Validates and saves profile data to database
    *
    * @param e - Form submission event
    */
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !userProfile) return;
+    console.log('🔄 Save profile triggered');
+    console.log('📝 Form data:', profile);
+    console.log('👤 User:', user?.id);
+    console.log('📋 UserProfile:', userProfile?.id);
+
+    if (!user || !userProfile) {
+      console.error('❌ Missing user or userProfile');
+      alert('Error: User data not loaded. Please refresh the page.');
+      return;
+    }
 
     setSaving(true);
     try {
+      console.log('💾 Attempting to update profile...');
+
+      // Prepare update data
+      const updateData = {
+        full_name: profile.fullName.trim() || null,
+        phone: profile.phone.trim() || null,
+        date_of_birth: profile.dateOfBirth || null,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('📤 Update data:', updateData);
+
       // Update user profile in database
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('users_profiles')
-        .update({
-          full_name: profile.fullName.trim() || null,
-          phone: profile.phone.trim() || null,
-          date_of_birth: profile.dateOfBirth || null,
-        })
-        .eq('id', user.id);
+        .update(updateData)
+        .eq('id', user.id)
+        .select();
+
+      console.log('📥 Supabase response:', { error, data });
 
       if (error) {
-        console.error('Error updating profile:', error);
-        alert('Failed to save profile. Please try again.');
+        console.error('❌ Supabase error:', error);
+        alert(`Failed to save profile: ${error.message}`);
         setSaving(false);
         return;
       }
+
+      console.log('✅ Profile updated successfully');
 
       // Update local state
       setUserProfile({
@@ -257,14 +279,14 @@ export default function ProfilePage() {
         alert('Profile updated successfully! Redirecting to dashboard...');
         setTimeout(() => {
           router.push('/dashboard');
-        }, 1000);
+        }, 1500);
       } else {
         alert('Profile updated successfully!');
       }
       setSaving(false);
     } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to save profile. Please try again.');
+      console.error('💥 Unexpected error:', error);
+      alert(`Failed to save profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setSaving(false);
     }
   };
