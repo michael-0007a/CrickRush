@@ -9,7 +9,41 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { loadShuffledPlayers, validatePlayerQueue, repairPlayerQueue } from '@/lib/playerQueueUtils';
+import { SAMPLE_PLAYERS } from '@/types/auction';
+
+/**
+ * Room-specific Fisher-Yates shuffle for consistent randomness per room
+ * This function is now deprecated - shuffling is handled by usePlayerQueue
+ */
+function shufflePlayersWithSeed<T>(players: T[], seed: string): T[] {
+  // This function is kept for backward compatibility but is no longer used
+  // The usePlayerQueue hook now handles all player shuffling
+  return [...players];
+}
+
+/**
+ * Load and shuffle players for the auction with room-specific randomization
+ */
+async function loadShuffledPlayers(roomId?: string): Promise<any[]> {
+  try {
+    // First try to load players from database
+    const { data: players, error } = await supabase
+      .from('players')
+      .select('*')
+      .order('base_price', { ascending: false });
+
+    let playersToShuffle = players && players.length > 0 ? players : SAMPLE_PLAYERS;
+
+    // Create room-specific seed that doesn't change over time for the same room
+    const roomSeed = roomId ? `auction_room_${roomId}_shuffle` : `fallback_${Date.now()}`;
+
+    return shufflePlayersWithSeed(playersToShuffle, roomSeed);
+  } catch (error) {
+    // Fallback to sample players on any error with room-specific shuffle
+    const seed = roomId ? `error_room_${roomId}_shuffle` : `error-fallback-${Date.now()}`;
+    return shufflePlayersWithSeed(SAMPLE_PLAYERS, seed);
+  }
+}
 
 /**
  * Interface representing the current auction state
@@ -32,6 +66,13 @@ interface AuctionState {
   sold_players: Player[];
   unsold_players: Player[];
   updated_at: string;
+  // Add sale notification for real-time broadcasting
+  sale_notification?: {
+    player_name: string;
+    team_name: string;
+    sold_amount: number;
+    timestamp: string;
+  } | null;
 }
 
 /**
@@ -78,8 +119,13 @@ interface BidData {
 /**
  * Enhanced custom hook for managing real-time auction state
  * Subscribes to live updates for all auction activities
+ * Now accepts shuffled players from usePlayerQueue to avoid duplication
  */
-export function useAuctionRealtime(roomId: string, userId: string | null = null) {
+export function useAuctionRealtime(
+  roomId: string,
+  userId: string | null = null,
+  shuffledPlayers: Player[] = []
+) {
   const [auctionState, setAuctionState] = useState<AuctionState | null>(null);
   const [participants, setParticipants] = useState<ParticipantData[]>([]);
   const [recentBids, setRecentBids] = useState<BidData[]>([]);
@@ -96,12 +142,9 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
    */
   const forceRefreshParticipants = useCallback(async () => {
     if (!roomId) {
-      console.log('⚠️ No roomId provided for participant refresh');
       setParticipants([]);
       return;
     }
-
-    console.log('🔄 Force refreshing participants for room:', roomId);
 
     try {
       // Get auction participants - Fix: use correct column name
@@ -111,12 +154,9 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
         .eq('auction_room_id', roomId); // Fixed: was 'room_id', should be 'auction_room_id'
 
       if (participantsError) {
-        console.error('❌ Error loading participants:', participantsError);
         setParticipants([]);
         return;
       }
-
-      console.log('📊 Raw participants data:', participantsData);
 
       // If we have participants, try to enrich them with user profiles
       if (participantsData && participantsData.length > 0) {
@@ -135,7 +175,7 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
               .single();
             userData = userProfile;
           } catch (userError) {
-            console.log(`⚠️ Could not load user profile for ${participant.user_id}:`, userError);
+            // Silent error handling for user profile loading
           }
 
           // Try to get franchise data if team_id exists
@@ -148,7 +188,7 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
                 .single();
               franchiseData = franchise;
             } catch (franchiseError) {
-              console.log(`⚠️ Could not load franchise for ${participant.team_id}:`, franchiseError);
+              // Silent error handling for franchise loading
             }
           }
 
@@ -165,15 +205,12 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
           enrichedParticipants.push(formattedParticipant);
         }
 
-        console.log('✅ Enriched participants:', enrichedParticipants);
         setParticipants(enrichedParticipants);
       } else {
-        console.log('📭 No participants found for room:', roomId);
         setParticipants([]);
       }
 
     } catch (error) {
-      console.error('❌ Critical error in forceRefreshParticipants:', error);
       setParticipants([]);
     }
   }, [roomId]);
@@ -195,7 +232,6 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
         .single();
 
       if (stateError) {
-        console.error('Error loading auction state:', stateError);
         setError('Failed to load auction state');
         return;
       }
@@ -204,7 +240,6 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
       if (stateData) {
         // If player_queue is missing or empty, load players from database
         if (!stateData.player_queue || !Array.isArray(stateData.player_queue) || stateData.player_queue.length === 0) {
-          console.log('🔄 Player queue is missing or empty, loading from database...');
 
           try {
             const { data: players, error: playersError } = await supabase
@@ -213,14 +248,11 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
               .order('base_price', { ascending: false });
 
             if (playersError) {
-              console.error('Error loading players:', playersError);
               stateData.player_queue = [];
             } else {
               stateData.player_queue = players || [];
-              console.log(`✅ Loaded ${stateData.player_queue.length} players for queue`);
             }
           } catch (error) {
-            console.error('Error loading players for queue:', error);
             stateData.player_queue = [];
           }
         }
@@ -240,15 +272,6 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
         currentPlayer = playerData;
       }
 
-      console.log('🔄 Auction state loaded:', {
-        isActive: stateData?.is_active,
-        currentPlayerIndex: stateData?.current_player_index,
-        totalPlayers: stateData?.total_players,
-        queueLength: stateData?.player_queue?.length || 0,
-        soldPlayersCount: stateData?.sold_players?.length || 0,
-        unsoldPlayersCount: stateData?.unsold_players?.length || 0
-      });
-
       setAuctionState({
         ...stateData,
         current_player: currentPlayer
@@ -266,7 +289,6 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
 
       setError(null);
     } catch (error) {
-      console.error('Error refreshing auction data:', error);
       setError('Failed to refresh auction data');
     } finally {
       setLoading(false);
@@ -292,11 +314,8 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
             filter: `room_id=eq.${roomId}`
           },
           async (payload) => {
-            console.log('🔄 Auction state update received:', payload);
-
             // Prevent duplicate updates by checking timestamp
             if (payload.new?.updated_at && payload.new.updated_at === lastUpdateRef.current) {
-              console.log('⏭️ Skipping duplicate auction state update');
               return;
             }
 
@@ -317,13 +336,6 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
               current_player: currentPlayer
             } as AuctionState;
 
-            console.log('✅ Updating auction state in real-time:', {
-              isActive: newState.is_active,
-              isPaused: newState.is_paused,
-              currentPlayer: currentPlayer?.name,
-              playerQueueLength: newState.player_queue?.length || 0
-            });
-
             setAuctionState(newState);
             lastUpdateRef.current = payload.new?.updated_at || '';
 
@@ -339,6 +351,23 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
             }
           }
         )
+        // Add subscription for auction room status changes
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'auction_rooms',
+            filter: `id=eq.${roomId}`
+          },
+          (payload) => {
+            // If room status changed to completed, trigger page refresh
+            if (payload.new?.status === 'completed') {
+              // Force a page refresh to show the "Auction Has Ended" page
+              window.location.reload();
+            }
+          }
+        )
         .on(
           'postgres_changes',
           {
@@ -348,8 +377,6 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
             filter: `auction_room_id=eq.${roomId}`
           },
           (payload) => {
-            console.log('👥 Participants update received:', payload);
-
             // Only refresh participants, don't trigger full refresh
             if (refreshTimeoutRef.current) {
               clearTimeout(refreshTimeoutRef.current);
@@ -366,27 +393,20 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
             filter: `room_id=eq.${roomId}`
           },
           (payload) => {
-            console.log('💰 New bid received:', payload);
-
             // Add new bid to recent bids without triggering full refresh
             setRecentBids(prev => [payload.new as BidData, ...prev.slice(0, 19)]);
           }
         )
         .subscribe((status) => {
-          console.log('📡 Real-time subscription status:', status);
           setIsConnected(status === 'SUBSCRIBED');
 
-          if (status === 'SUBSCRIBED') {
-            console.log('🟢 Real-time connection established for room:', roomId);
-          } else if (status === 'CLOSED') {
-            console.log('🔴 Real-time connection closed for room:', roomId);
+          if (status === 'CLOSED') {
             setIsConnected(false);
           }
         });
 
       channelRef.current = channel;
     } catch (error) {
-      console.error('Error setting up real-time subscriptions:', error);
       setError('Failed to connect to real-time updates');
     }
   }, [roomId, forceRefreshParticipants]);
@@ -430,8 +450,11 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
       console.log('🚀 Starting auction for room:', roomId);
 
       try {
-        // Use the utility function to load and shuffle players
-        const shuffledPlayers = await loadShuffledPlayers();
+        // Use the shuffled players provided by usePlayerQueue instead of loading our own
+        if (!shuffledPlayers || shuffledPlayers.length === 0) {
+          throw new Error('No shuffled players provided. Make sure usePlayerQueue is loaded first.');
+        }
+
         const firstPlayer = shuffledPlayers[0];
 
         // Get room data for timer settings
@@ -443,9 +466,10 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
 
         const timerSeconds = roomData?.timer_seconds || 30;
 
-        console.log('🔄 Starting auction with', shuffledPlayers.length, 'shuffled players');
+        console.log(`🔄 Starting auction with ${shuffledPlayers.length} shuffled players for room ${roomId}`);
+        console.log(`🎯 Starting with player: ${firstPlayer.name}`);
 
-        // Update auction state to start with properly shuffled queue
+        // Update auction state to start with the properly shuffled queue from usePlayerQueue
         const { error } = await supabase
           .from('auction_state')
           .update({
@@ -454,12 +478,12 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
             current_player_id: firstPlayer.id,
             current_player_index: 0,
             current_bid: 0,
-            base_price: firstPlayer.base_price,
+            base_price: firstPlayer.basePrice || firstPlayer.base_price,
             leading_team: null,
             current_bidder_id: null,
             time_remaining: timerSeconds,
             total_players: shuffledPlayers.length,
-            player_queue: shuffledPlayers,
+            player_queue: shuffledPlayers, // Use the shuffled players from usePlayerQueue
             sold_players: [],
             unsold_players: [],
             updated_at: new Date().toISOString()
@@ -492,7 +516,7 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
           current_player: firstPlayer,
           current_player_index: 0,
           current_bid: 0,
-          base_price: firstPlayer.base_price,
+          base_price: firstPlayer.basePrice || firstPlayer.base_price,
           time_remaining: timerSeconds,
           total_players: shuffledPlayers.length,
           player_queue: shuffledPlayers
@@ -534,31 +558,53 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
         .eq('room_id', roomId)
         .single();
 
-      // If player queue is missing, reload it from players table
+      // Ensure we have a valid player queue - if missing, reload with fresh randomization
       let playerQueue = currentState?.player_queue;
-      if (!playerQueue || playerQueue.length === 0) {
-        const { data: players } = await supabase
-          .from('players')
-          .select('*')
-          .order('base_price', { ascending: false });
-        playerQueue = players || [];
+      if (!playerQueue || !Array.isArray(playerQueue) || playerQueue.length === 0) {
+        console.log('🔧 Player queue missing during resume, reloading with fresh randomization...');
+        const shuffledPlayers = await loadShuffledPlayers();
+        playerQueue = shuffledPlayers;
       }
 
+      // Update database first, then immediately update local state
       const { error } = await supabase
         .from('auction_state')
         .update({
           is_paused: false,
-          player_queue: playerQueue, // Ensure queue is preserved
+          player_queue: playerQueue, // Ensure queue is preserved/restored
           total_players: playerQueue.length,
           updated_at: new Date().toISOString()
         })
         .eq('room_id', roomId);
 
       if (error) throw error;
+
+      // Immediate local state update to prevent UI flicker
+      setAuctionState(prev => prev ? {
+        ...prev,
+        is_paused: false,
+        player_queue: playerQueue,
+        total_players: playerQueue.length
+      } : null);
     },
 
     nextPlayer: async () => {
       if (!roomId || !auctionState) throw new Error('Invalid state');
+
+      // PAUSE AUCTION FIRST - Ensure clean state transition
+      if (auctionState.is_active && !auctionState.is_paused) {
+        console.log('⏸️ Pausing auction before moving to next player...');
+        await supabase
+          .from('auction_state')
+          .update({
+            is_paused: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('room_id', roomId);
+
+        // Wait for pause to take effect
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
       console.log('🔄 Moving to next player. Current state:', {
         currentIndex: auctionState.current_player_index,
@@ -574,64 +620,47 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
       // Get the current queue and validate it - with more robust handling
       let currentQueue = auctionState.player_queue;
 
-      // ALWAYS ensure we have a valid queue before proceeding
+      // If queue is invalid, use the shuffled players from usePlayerQueue instead of reloading from DB
       if (!currentQueue || !Array.isArray(currentQueue) || currentQueue.length === 0) {
-        console.log('🔧 Player queue is invalid, loading fresh data from database...');
+        console.log('🔧 Player queue is invalid, using shuffled players from usePlayerQueue...');
 
-        try {
-          // Load fresh player data directly from database
-          const { data: freshPlayers, error: playersError } = await supabase
-            .from('players')
-            .select('*')
-            .order('base_price', { ascending: false });
-
-          if (playersError) {
-            console.error('❌ Error loading fresh players:', playersError);
-            throw new Error('Failed to load players from database');
-          }
-
-          if (!freshPlayers || freshPlayers.length === 0) {
-            throw new Error('No players found in database');
-          }
-
-          console.log(`✅ Loaded ${freshPlayers.length} fresh players from database`);
-
-          // Update the auction state in database with fresh queue
-          const { error: updateError } = await supabase
-            .from('auction_state')
-            .update({
-              player_queue: freshPlayers,
-              total_players: freshPlayers.length,
-              updated_at: new Date().toISOString()
-            })
-            .eq('room_id', roomId);
-
-          if (updateError) {
-            console.error('❌ Error updating auction state with fresh queue:', updateError);
-            throw new Error('Failed to update auction state');
-          }
-
-          // Update local state immediately
-          setAuctionState(prev => prev ? {
-            ...prev,
-            player_queue: freshPlayers,
-            total_players: freshPlayers.length
-          } : null);
-
-          // Use fresh queue for current operation
-          currentQueue = freshPlayers;
-
-          console.log('✅ Fresh player queue loaded and updated successfully');
-
-        } catch (error) {
-          console.error('❌ Failed to load fresh player queue:', error);
-          throw new Error('Failed to initialize player queue: ' + (error as Error).message);
+        if (!shuffledPlayers || shuffledPlayers.length === 0) {
+          throw new Error('No shuffled players available from usePlayerQueue. Make sure usePlayerQueue is loaded first.');
         }
+
+        console.log(`✅ Using ${shuffledPlayers.length} shuffled players from usePlayerQueue`);
+
+        // Update the auction state in database with shuffled queue
+        const { error: updateError } = await supabase
+          .from('auction_state')
+          .update({
+            player_queue: shuffledPlayers,
+            total_players: shuffledPlayers.length,
+            updated_at: new Date().toISOString()
+          })
+          .eq('room_id', roomId);
+
+        if (updateError) {
+          console.error('❌ Error updating auction state with shuffled queue:', updateError);
+          throw new Error('Failed to update auction state');
+        }
+
+        // Update local state immediately
+        setAuctionState(prev => prev ? {
+          ...prev,
+          player_queue: shuffledPlayers,
+          total_players: shuffledPlayers.length
+        } : null);
+
+        // Use shuffled queue for current operation
+        currentQueue = shuffledPlayers;
+
+        console.log('✅ Shuffled player queue restored successfully');
       }
 
       // Final validation - ensure we have a valid queue
       if (!currentQueue || !Array.isArray(currentQueue) || currentQueue.length === 0) {
-        throw new Error('Player queue is still invalid after loading fresh data');
+        throw new Error('Player queue is still invalid after using shuffled players');
       }
 
       // Check if we've reached the end of the auction
@@ -665,6 +694,15 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
 
       console.log('✅ Moving to next player:', nextPlayer.name || nextPlayer.id, 'at index', nextIndex);
 
+      // Get room data for timer settings
+      const { data: roomData } = await supabase
+        .from('auction_rooms')
+        .select('timer_seconds')
+        .eq('id', roomId)
+        .single();
+
+      const timerSeconds = roomData?.timer_seconds || 30;
+
       // Update auction state with next player
       const { error } = await supabase
         .from('auction_state')
@@ -675,7 +713,7 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
           base_price: nextPlayer.base_price,
           leading_team: null,
           current_bidder_id: null,
-          time_remaining: 30,
+          time_remaining: timerSeconds, // Use room's timer setting instead of hardcoded 30
           updated_at: new Date().toISOString()
         })
         .eq('room_id', roomId);
@@ -692,6 +730,21 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
     addTime: async (seconds: number) => {
       if (!roomId || !auctionState) throw new Error('Invalid state');
 
+      // PAUSE AUCTION FIRST - Ensure clean state transition
+      if (auctionState.is_active && !auctionState.is_paused) {
+        console.log('⏸️ Pausing auction before adding time...');
+        await supabase
+          .from('auction_state')
+          .update({
+            is_paused: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('room_id', roomId);
+
+        // Wait for pause to take effect
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       const newTimeRemaining = Math.max(0, auctionState.time_remaining + seconds);
 
       const { error } = await supabase
@@ -707,7 +760,7 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
         throw error;
       }
 
-      console.log(`��� Added ${seconds} seconds to auction timer. New time: ${newTimeRemaining}`);
+      console.log(`⏰ Added ${seconds} seconds to auction timer. New time: ${newTimeRemaining}`);
     },
 
     // Add function to mark current player as sold or unsold
@@ -774,8 +827,20 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
         throw new Error('Bid must be higher than current bid');
       }
 
+      // Enhanced budget validation with detailed messages
       if (amount > participant.budget_remaining) {
-        throw new Error('Insufficient budget');
+        const shortfall = amount - participant.budget_remaining;
+        throw new Error(`Insufficient budget! You need ₹${shortfall}L more. Your remaining budget: ₹${participant.budget_remaining}L`);
+      }
+
+      // Check if auction is active
+      if (!auctionState.is_active || auctionState.is_paused) {
+        throw new Error('Cannot place bid when auction is paused or inactive');
+      }
+
+      // Check if there's a current player
+      if (!auctionState.current_player_id) {
+        throw new Error('No player is currently up for auction');
       }
 
       // Insert new bid
@@ -813,6 +878,24 @@ export function useAuctionRealtime(roomId: string, userId: string | null = null)
         .eq('room_id', roomId)
         .eq('player_id', auctionState.current_player_id)
         .neq('bidder_id', userId);
+    },
+
+    // Helper function to check if a user can afford a bid
+    canAffordBid: (amount: number, userIdToCheck: string): { canAfford: boolean; message?: string } => {
+      const participant = participants.find(p => p.user_id === userIdToCheck);
+      if (!participant) {
+        return { canAfford: false, message: 'Participant not found' };
+      }
+
+      if (amount > participant.budget_remaining) {
+        const shortfall = amount - participant.budget_remaining;
+        return {
+          canAfford: false,
+          message: `Insufficient budget! Need ₹${shortfall}L more. Remaining: ₹${participant.budget_remaining}L`
+        };
+      }
+
+      return { canAfford: true };
     }
   };
 

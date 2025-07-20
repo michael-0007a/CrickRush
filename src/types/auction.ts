@@ -14,7 +14,7 @@ export interface IPLTeam {
 }
 
 export interface Player {
-  id: number;
+  id: string; // Changed from number to string to match UUID database field
   name: string;
   nationality: string;
   category: 'Batsman' | 'Bowler' | 'All-Rounder' | 'Wicket-Keeper' | 'Fast Bowler' | 'Spin Bowler';
@@ -226,7 +226,7 @@ export const IPL_TEAMS: IPLTeam[] = [
 // Sample Players data
 export const SAMPLE_PLAYERS: Player[] = [
   {
-    id: 1,
+    id: "1",
     name: "Jos Buttler",
     nationality: "England",
     category: "Wicket-Keeper",
@@ -237,7 +237,7 @@ export const SAMPLE_PLAYERS: Player[] = [
     stats: { matches: 85, runs: 2582, average: 35.8, strikeRate: 148.2 }
   },
   {
-    id: 2,
+    id: "2",
     name: "Mohammed Shami",
     nationality: "India",
     category: "Fast Bowler",
@@ -248,7 +248,7 @@ export const SAMPLE_PLAYERS: Player[] = [
     stats: { matches: 95, wickets: 127, average: 26.8, economy: 8.2 }
   },
   {
-    id: 3,
+    id: "3",
     name: "Mitchell Starc",
     nationality: "Australia",
     category: "Fast Bowler",
@@ -259,7 +259,7 @@ export const SAMPLE_PLAYERS: Player[] = [
     stats: { matches: 45, wickets: 51, average: 25.4, economy: 8.8 }
   },
   {
-    id: 4,
+    id: "4",
     name: "Marcus Stoinis",
     nationality: "Australia",
     category: "All-Rounder",
@@ -270,7 +270,7 @@ export const SAMPLE_PLAYERS: Player[] = [
     stats: { matches: 78, runs: 1516, wickets: 32, strikeRate: 135.8 }
   },
   {
-    id: 5,
+    id: "5",
     name: "Devdutt Padikkal",
     nationality: "India",
     category: "Batsman",
@@ -281,7 +281,7 @@ export const SAMPLE_PLAYERS: Player[] = [
     stats: { matches: 42, runs: 1124, average: 31.2, strikeRate: 124.5 }
   },
   {
-    id: 6,
+    id: "6",
     name: "Kagiso Rabada",
     nationality: "South Africa",
     category: "Fast Bowler",
@@ -292,7 +292,7 @@ export const SAMPLE_PLAYERS: Player[] = [
     stats: { matches: 64, wickets: 87, average: 22.3, economy: 8.1 }
   },
   {
-    id: 7,
+    id: "7",
     name: "Yuzvendra Chahal",
     nationality: "India",
     category: "Spin Bowler",
@@ -303,7 +303,7 @@ export const SAMPLE_PLAYERS: Player[] = [
     stats: { matches: 142, wickets: 187, average: 23.1, economy: 7.8 }
   },
   {
-    id: 8,
+    id: "8",
     name: "Glenn Maxwell",
     nationality: "Australia",
     category: "All-Rounder",
@@ -314,7 +314,7 @@ export const SAMPLE_PLAYERS: Player[] = [
     stats: { matches: 108, runs: 2771, wickets: 37, strikeRate: 154.3 }
   },
   {
-    id: 9,
+    id: "9",
     name: "Prithvi Shaw",
     nationality: "India",
     category: "Batsman",
@@ -325,7 +325,7 @@ export const SAMPLE_PLAYERS: Player[] = [
     stats: { matches: 76, runs: 1892, average: 26.2, strikeRate: 147.8 }
   },
   {
-    id: 10,
+    id: "10",
     name: "Liam Livingstone",
     nationality: "England",
     category: "All-Rounder",

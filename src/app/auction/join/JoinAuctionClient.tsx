@@ -111,6 +111,23 @@ export default function JoinAuctionClient() {
         return;
       }
 
+      // Check if room is full (max participants reached)
+      const { data: currentParticipants, error: participantCountError } = await supabase
+        .from('auction_participants')
+        .select('id')
+        .eq('auction_room_id', roomData.id);
+
+      if (participantCountError) {
+        console.error('Error checking participants:', participantCountError);
+        setError('Failed to check room availability');
+        return;
+      }
+
+      if (currentParticipants && currentParticipants.length >= roomData.max_participants) {
+        setError(`This auction room is full (${roomData.max_participants} teams maximum)`);
+        return;
+      }
+
       // Load available teams
       await loadAvailableTeams(roomData);
 

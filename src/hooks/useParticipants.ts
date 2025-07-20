@@ -76,7 +76,7 @@ export function useParticipants(roomId: string, userId: string | null) {
 
       setParticipants(enrichedParticipants);
     } catch (err) {
-      console.error('Error loading participants:', err);
+      // Error loading participants - silent error handling
     } finally {
       setLoading(false);
     }

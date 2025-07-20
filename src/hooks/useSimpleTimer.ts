@@ -8,6 +8,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 
+/**
+ * Custom hook for managing synchronized auction timers
+ * @param roomId - The auction room identifier
+ * @param initialTime - Initial time in seconds
+ * @param isActive - Whether the timer is active
+ * @param isPaused - Whether the timer is paused
+ * @param onTimeUpdate - Callback for time updates
+ * @param onTimeout - Callback when timer reaches zero
+ * @returns Timer state and controls
+ */
 export function useSimpleTimer(
   roomId: string,
   initialTime: number,
@@ -50,7 +60,6 @@ export function useSimpleTimer(
 
         // Only sync if there's a significant difference (more than 2 seconds)
         if (Math.abs(dbTime - localTime) > 2) {
-          console.log(`⏰ Timer sync: DB=${dbTime}s, Local=${localTime}s - syncing to DB`);
           setTimeRemaining(dbTime);
 
           if (onTimeUpdateRef.current) {
@@ -61,14 +70,13 @@ export function useSimpleTimer(
         lastSyncRef.current = Date.now();
       }
     } catch (error) {
-      console.warn('Timer sync failed:', error);
+      // Timer sync failed - error handling without console output
     }
   }, [roomId, timeRemaining]);
 
   // Update timer from external changes
   useEffect(() => {
     if (initialTime !== timeRemaining) {
-      console.log(`⏰ Timer updated externally: ${timeRemaining}s → ${initialTime}s`);
       setTimeRemaining(initialTime);
     }
   }, [initialTime]);
@@ -89,8 +97,6 @@ export function useSimpleTimer(
     }
 
     if (shouldRun) {
-      console.log('▶️ Starting timer countdown');
-
       // Main timer countdown
       intervalRef.current = setInterval(() => {
         setTimeRemaining(prev => {
@@ -107,14 +113,11 @@ export function useSimpleTimer(
             .update({ time_remaining: newTime })
             .eq('room_id', roomId)
             .then(({ error }) => {
-              if (error) {
-                console.warn('Failed to update timer in database:', error);
-              }
+              // Silent error handling for database updates
             });
 
           // Handle timeout
           if (newTime === 0 && onTimeoutRef.current) {
-            console.log('⏰ Timer reached 0 - triggering timeout');
             onTimeoutRef.current();
           }
 
@@ -124,8 +127,6 @@ export function useSimpleTimer(
 
       // Sync with database every 3 seconds to prevent drift
       syncIntervalRef.current = setInterval(syncWithDatabase, 3000);
-    } else {
-      console.log('⏸️ Timer paused or stopped');
     }
 
     return () => {
@@ -152,7 +153,6 @@ export function useSimpleTimer(
 
   return {
     timeRemaining,
-    isRunning,
-    syncWithDatabase
+    isRunning
   };
 }

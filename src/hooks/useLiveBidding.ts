@@ -318,7 +318,7 @@ export function useLiveBidding(roomId: string, userId: string | null) {
                 is_active: newState.is_active,
                 is_paused: newState.is_paused,
                 current_player: newState.current_player,
-                current_bid: incomingBid // Use incoming bid (should be 0 for new player)
+                current_bid: incomingBid, // Use incoming bid (should be 0 for new player)
                 leading_team: newState.leading_team,
                 leading_bidder: newState.leading_bidder,
                 time_remaining: newState.time_remaining || 30

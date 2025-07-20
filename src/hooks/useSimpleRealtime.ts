@@ -9,6 +9,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
+/**
+ * Custom hook for managing real-time auction updates
+ * @param roomId - The auction room identifier
+ * @param onUpdate - Callback function triggered on updates
+ * @returns Object containing connection status and update utilities
+ */
 export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
   const [isConnected, setIsConnected] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -21,7 +27,6 @@ export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
   }, [onUpdate]);
 
   const triggerUpdate = useCallback(() => {
-    console.log('🔄 Real-time update triggered');
     setLastUpdateTime(Date.now());
     if (onUpdateRef.current) {
       onUpdateRef.current();
@@ -36,8 +41,6 @@ export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
       channelRef.current.unsubscribe();
       channelRef.current = null;
     }
-
-    console.log('🚀 Setting up comprehensive real-time connection for room:', roomId);
 
     // Create comprehensive channel for all auction-related updates
     const channel = supabase
@@ -57,7 +60,6 @@ export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
           filter: `room_id=eq.${roomId}`
         },
         (payload) => {
-          console.log('🎯 Auction state changed:', payload.eventType, payload.new);
           triggerUpdate();
         }
       )
@@ -71,7 +73,6 @@ export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
           filter: `auction_room_id=eq.${roomId}`
         },
         (payload) => {
-          console.log('👥 Participant data changed:', payload.eventType, payload.new);
           triggerUpdate();
         }
       )
@@ -85,7 +86,6 @@ export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
           filter: `auction_room_id=eq.${roomId}`
         },
         (payload) => {
-          console.log('💰 Player purchase/sale:', payload.eventType, payload.new);
           triggerUpdate();
         }
       )
@@ -99,7 +99,6 @@ export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
           filter: `id=eq.${roomId}`
         },
         (payload) => {
-          console.log('🏠 Room status changed:', payload.eventType, payload.new);
           triggerUpdate();
         }
       )
@@ -114,40 +113,31 @@ export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
         (payload) => {
           // Only trigger if it's for this room's current auction
           if (payload.new && payload.new.auction_room_id === roomId) {
-            console.log('📈 Bidding history updated:', payload.eventType);
             triggerUpdate();
           }
         }
       )
       // Broadcast channel for instant updates
       .on('broadcast', { event: 'auction_update' }, (payload) => {
-        console.log('📡 Broadcast update received:', payload);
         triggerUpdate();
       })
       .subscribe((status) => {
-        console.log('📡 Real-time connection status:', status);
-
         if (status === 'SUBSCRIBED') {
-          console.log('✅ Real-time connection established for room:', roomId);
           setIsConnected(true);
           // Trigger initial update when connected
           triggerUpdate();
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Real-time connection error - attempting to reconnect...');
           setIsConnected(false);
 
           // Attempt to reconnect after a short delay
           setTimeout(() => {
-            console.log('🔄 Attempting to reconnect real-time...');
             setupConnection();
           }, 2000);
         } else if (status === 'CLOSED') {
-          console.warn('⚠️ Real-time connection closed');
           setIsConnected(false);
 
           // Attempt to reconnect
           setTimeout(() => {
-            console.log('🔄 Reconnecting after connection closed...');
             setupConnection();
           }, 1000);
         } else {
@@ -160,7 +150,6 @@ export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
 
   const cleanup = useCallback(() => {
     if (channelRef.current) {
-      console.log('🧹 Cleaning up real-time connection');
       channelRef.current.unsubscribe();
       channelRef.current = null;
       setIsConnected(false);
@@ -176,7 +165,6 @@ export function useSimpleRealtime(roomId: string, onUpdate?: () => void) {
   useEffect(() => {
     if (!isConnected && roomId) {
       const reconnectTimer = setTimeout(() => {
-        console.log('🔄 Attempting to reconnect real-time...');
         cleanup();
         setupConnection();
       }, 3000);
